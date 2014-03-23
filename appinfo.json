@@ -15,44 +15,15 @@
     "resources": {
         "media": [
             {
+                "menuIcon": true,
                 "type": "png",
-                "name": "IMAGE_NUM_9",
-                "file": "images/cst_9.png"
+                "name": "IMAGE_MENU_ICON",
+                "file": "images/menu_icon_cst_watch.png"
             },
             {
                 "type": "png",
-                "name": "IMAGE_NUM_8",
-                "file": "images/cst_8.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_7",
-                "file": "images/cst_7.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_6",
-                "file": "images/cst_6.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_5",
-                "file": "images/cst_5.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_4",
-                "file": "images/cst_4.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_3",
-                "file": "images/cst_3.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_2",
-                "file": "images/cst_2.png"
+                "name": "IMAGE_NUM_0",
+                "file": "images/cst_0.png"
             },
             {
                 "type": "png",
@@ -61,14 +32,43 @@
             },
             {
                 "type": "png",
-                "name": "IMAGE_NUM_0",
-                "file": "images/cst_0.png"
+                "name": "IMAGE_NUM_2",
+                "file": "images/cst_2.png"
             },
             {
-                "menuIcon": true,
                 "type": "png",
-                "name": "IMAGE_MENU_ICON",
-                "file": "images/menu_icon_cst_watch.png"
+                "name": "IMAGE_NUM_3",
+                "file": "images/cst_3.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_NUM_4",
+                "file": "images/cst_4.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_NUM_5",
+                "file": "images/cst_5.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_NUM_6",
+                "file": "images/cst_6.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_NUM_7",
+                "file": "images/cst_7.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_NUM_8",
+                "file": "images/cst_8.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_NUM_9",
+                "file": "images/cst_9.png"
             }
         ]
     }
