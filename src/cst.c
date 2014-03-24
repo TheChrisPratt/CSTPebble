@@ -51,7 +51,7 @@ const int IMAGE_RESOURCE_IDS[NUMBER_OF_IMAGES] = {
 const int POWER_IMAGE_RESOURCE_IDS[NUMBER_OF_POWER_IMAGES] = {
   RESOURCE_ID_IMAGE_POWER_0, RESOURCE_ID_IMAGE_POWER_1, RESOURCE_ID_IMAGE_POWER_2,
   RESOURCE_ID_IMAGE_POWER_3, RESOURCE_ID_IMAGE_POWER_4
-}
+};
 
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
@@ -65,7 +65,7 @@ static BitmapLayer *power_layer;
 // The state is either "empty" or the digit of the image currently in
 // the slot
 static int image_slot_state[TOTAL_IMAGE_SLOTS] = {EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT};
-static boolean prev_bluetooth = false;
+static bool prev_bluetooth = false;
 static short prev_power = -1;
 
 /**
@@ -119,7 +119,7 @@ static void unload_digit_image_from_slot (int slot_number) {
  * Includes optional blanking of first leading zero,
  *   i.e. displays ' 0' rather than '00'.
  */
-static void display_value (unsigned short value,unsigned short row_number,bool show_first_leading_zero) {
+static void display_value (unsigned short value,unsigned short row_number) {
   value %= 100; // Maximum of two digits per row.
     // Column order is: | Column 0 | Column 1 |
     // (We process the columns in reverse order because that makes
