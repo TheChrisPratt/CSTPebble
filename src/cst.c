@@ -1,5 +1,4 @@
 /*
-
    Big Time watch using the Central Standard Time Font
 
    A digital watch with large, fluid digits.
@@ -17,9 +16,7 @@
       but I figured it would still be pushing it to load them all at
       once, even if they just fit, so I've stuck with the load/unload
       approach.
-
  */
-
 #include "pebble.h"
 
 static Window *window;
@@ -50,8 +47,17 @@ const int IMAGE_RESOURCE_IDS[NUMBER_OF_IMAGES] = {
   RESOURCE_ID_IMAGE_NUM_9
 };
 
+const int POWER_IMAGE_RESOURCE_IDS[NUMBER_OF_POWER_IMAGES] = {
+  RESOURCE_ID_IMAGE_POWER_0, RESOURCE_ID_IMAGE_POWER_1, RESOURCE_ID_IMAGE_POWER_2,
+  RESOURCE_ID_IMAGE_POWER_3, RESOURCE_ID_IMAGE_POWER_4
+}
+
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
+static GBitmap *bluetooth_image = NULL;
+static BitmapLayer *bluetooth_layer;
+static GBitmap *power_image = NULL;
+static BitmapLayer *power_layer;
 
 #define EMPTY_SLOT -1
 
@@ -158,7 +164,15 @@ static void handle_power_level (BatteryChargeState charge_state) {
     power_level = charge_state.charge_percent / 25;
   }
   if(power_level != prev_power) {
-    //TODO: Load and Display the Power Level Indicator
+      // Load and Display the Power Level Indicator
+    power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
+    GRect frame = (GRect) {
+      .origin = { 33,135 },
+      .size = power_image->bounds.size
+    };
+    power_layer = bitmap_layer_create(frame);
+    bitmap_layer_set_bitmap(power_layer,power_image);
+    layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
     prev_power = power_level;
   }
 } //handle_power_level
@@ -166,9 +180,25 @@ static void handle_power_level (BatteryChargeState charge_state) {
 static void handle_connection (bool connected) {
   if(connected != prev_bluetooth) {
     if(connected) {
-      //TODO: Display the Bluetooth Image Layer
+        //Display the Bluetooth Image Layer
+      if(bluetooth_image == NULL) {
+        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
+        GRect frame = (GRect) {
+          .origin = { 105,135 },
+          .size = bluetooth_image->bounds.size
+        };
+        bluetooth_layer = bitmap_layer_create(frame);
+        bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
+        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
+      }
     } else {
-      //TODO: Hide the Bluetooth Image Layer
+        // Hide the Bluetooth Image Layer
+      if(bluetooth_image != NULL) {
+        layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
+        bitmap_layer_destroy(bluetooth_layer);
+        gbitmap_destroy(bluetooth_image);
+        bluetooth_image = NULL;
+      }
     }
     prev_bluetooth = connected;
   }  
@@ -191,7 +221,7 @@ static void init () {
   bluetooth_connection_service_subscribe(handle_connection);
 } //init
 
-static void deinit () {
+static void destroy () {
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
   bluetooth_connection_service_unsubscribe();
@@ -199,10 +229,10 @@ static void deinit () {
     unload_digit_image_from_slot(i);
   }
   window_destroy(window);
-} //deinit
+} //destroy
 
 int main (void) {
   init();
   app_event_loop();
-  deinit();
+  destroy();
 } //main
