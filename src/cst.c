@@ -37,6 +37,7 @@ static Window *window;
 #define TOTAL_IMAGE_SLOTS 4
 
 #define NUMBER_OF_IMAGES 10
+#define NUMBER_OF_POWER_IMAGES 5
 
 // These images are 72 x 84 pixels (i.e. a quarter of the display),
 // black and white with the digit character centered in the image.
