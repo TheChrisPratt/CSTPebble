@@ -78,27 +78,27 @@
             {
                 "type": "png",
                 "name": "IMAGE_POWER_0",
-                "file": "power_0.png"
+                "file": "images/power_0.png"
             },
             {
                 "type": "png",
                 "name": "IMAGE_POWER_1",
-                "file": "power_1.png"
+                "file": "images/power_1.png"
             },
             {
                 "type": "png",
                 "name": "IMAGE_POWER_2",
-                "file": "power_2.png"
+                "file": "images/power_2.png"
             },
             {
                 "type": "png",
                 "name": "IMAGE_POWER_3",
-                "file": "power_3.png"
+                "file": "images/power_3.png"
             },
             {
                 "type": "png",
                 "name": "IMAGE_POWER_4",
-                "file": "power_4.png"
+                "file": "images/power_4.png"
             }
         ]
     }
