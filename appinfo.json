@@ -16,6 +16,11 @@
         "media": [
             {
                 "type": "png",
+                "name": "IMAGE_POWER_5",
+                "file": "images/power_5.png"
+            },
+            {
+                "type": "png",
                 "name": "IMAGE_POWER_4",
                 "file": "images/power_4.png"
             },
