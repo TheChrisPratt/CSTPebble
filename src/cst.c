@@ -221,6 +221,8 @@ static void init () {
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
   display_time(tick_time);
+  handle_power_level(battery_state_service_peek());
+  handle_connection(bluetooth_connection_service_peek());
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
   battery_state_service_subscribe(handle_power_level);
   bluetooth_connection_service_subscribe(handle_connection);
