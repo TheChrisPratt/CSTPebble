@@ -91,8 +91,8 @@ static void load_digit_image_into_slot (int slot_number,int digit_value) {
           .size = images[slot_number]->bounds.size
         };
         image_layers[slot_number] = bitmap_layer_create(frame);
-        bitmap_layer_set_bitmap(image_layer[slot_number],images[slot_number]);
-        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(image_layer[slot_number]));
+        bitmap_layer_set_bitmap(image_layers[slot_number],images[slot_number]);
+        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(image_layers[slot_number]));
       }
     }
   }
