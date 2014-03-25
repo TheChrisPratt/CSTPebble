@@ -37,9 +37,9 @@ static Window *window;
 #define TOTAL_IMAGE_SLOTS 4
 
 #define NUMBER_OF_IMAGES 10
-#define NUMBER_OF_POWER_IMAGES 5
+#define NUMBER_OF_POWER_IMAGES 6
 
-// These images are 72 x 84 pixels (i.e. a quarter of the display),
+// These images are 72 x 74 pixels (i.e. a quarter of the display),
 // black and white with the digit character centered in the image.
 const int IMAGE_RESOURCE_IDS[NUMBER_OF_IMAGES] = {
   RESOURCE_ID_IMAGE_NUM_0, RESOURCE_ID_IMAGE_NUM_1, RESOURCE_ID_IMAGE_NUM_2,
@@ -50,15 +50,13 @@ const int IMAGE_RESOURCE_IDS[NUMBER_OF_IMAGES] = {
 
 const int POWER_IMAGE_RESOURCE_IDS[NUMBER_OF_POWER_IMAGES] = {
   RESOURCE_ID_IMAGE_POWER_0, RESOURCE_ID_IMAGE_POWER_1, RESOURCE_ID_IMAGE_POWER_2,
-  RESOURCE_ID_IMAGE_POWER_3, RESOURCE_ID_IMAGE_POWER_4
+  RESOURCE_ID_IMAGE_POWER_3, RESOURCE_ID_IMAGE_POWER_4, RESOURCE_ID_IMAGE_POWER_5
 };
 
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
 static GBitmap *bluetooth_image = NULL;
-static BitmapLayer *bluetooth_layer;
-static GBitmap *power_image = NULL;
-static BitmapLayer *power_layer;
+//static GBitmap *power_image = NULL;
 
 #define EMPTY_SLOT -1
 
@@ -80,15 +78,21 @@ static void load_digit_image_into_slot (int slot_number,int digit_value) {
     if((digit_value >= 0) && (digit_value <= 9)) {
       if(image_slot_state[slot_number] == EMPTY_SLOT) {
         images[slot_number] = gbitmap_create_with_resource(IMAGE_RESOURCE_IDS[digit_value]);
+// TODO: Finish investigation if sub-layer doesn't pan out        
+        // if((slot_number == 2) && (bluetooth_image != NULL)) {
+        //   GRect subframe = (GRect) {
+        //     .origin = { 33, 51 },
+        //     .size = { 6, 10 }
+        //   }
+        //   gbitmap_init_as_sub_bitmap(bluetooth_image,images[slot_number])
+        // }
         GRect frame = (GRect) {
-          .origin = { (slot_number % 2) * 72,(slot_number / 2) * 84 },
+          .origin = { (slot_number % 2) * 72,(slot_number / 2) * 74 },
           .size = images[slot_number]->bounds.size
         };
-        BitmapLayer *bitmap_layer = bitmap_layer_create(frame);
-        image_layers[slot_number] = bitmap_layer;
-        bitmap_layer_set_bitmap(bitmap_layer, images[slot_number]);
-        Layer *window_layer = window_get_root_layer(window);
-        layer_add_child(window_layer, bitmap_layer_get_layer(bitmap_layer));
+        image_layers[slot_number] = bitmap_layer_create(frame);
+        bitmap_layer_set_bitmap(image_layer[slot_number],images[slot_number]);
+        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(image_layer[slot_number]));
       }
     }
   }
@@ -158,49 +162,50 @@ static void handle_minute_tick (struct tm *tick_time,TimeUnits units_changed) {
 } //handle_minute_tick
 
 static void handle_power_level (BatteryChargeState charge_state) {
-  short power_level = -1;
-  if(charge_state.is_charging) {
-    power_level = 4;  
-  } else {
-    power_level = charge_state.charge_percent / 25;
-  }
-  if(power_level != prev_power) {
-      // Load and Display the Power Level Indicator
-    power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
-    GRect frame = (GRect) {
-      .origin = { 33,135 },
-      .size = power_image->bounds.size
-    };
-    power_layer = bitmap_layer_create(frame);
-    bitmap_layer_set_bitmap(power_layer,power_image);
-    layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
-    prev_power = power_level;
-  }
+  // short power_level = -1;
+  // if(charge_state.is_charging) {
+  //   power_level = 5;  
+  // } else {
+  //   power_level = charge_state.charge_percent / 20;
+  // }
+  // if(power_level != prev_power) {
+  //     // Load and Display the Power Level Indicator
+  //   power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
+  //   GRect frame = (GRect) {
+  //     .origin = { 33,135 },
+  //     .size = power_image->bounds.size
+  //   };
+  //   power_layer = bitmap_layer_create(frame);
+  //   bitmap_layer_set_bitmap(power_layer,power_image);
+  //   layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
+  //   prev_power = power_level;
+  // }
 } //handle_power_level
 
 static void handle_connection (bool connected) {
   if(connected != prev_bluetooth) {
-    if(connected) {
-        //Display the Bluetooth Image Layer
-      if(bluetooth_image == NULL) {
-        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
-        GRect frame = (GRect) {
-          .origin = { 105,135 },
-          .size = bluetooth_image->bounds.size
-        };
-        bluetooth_layer = bitmap_layer_create(frame);
-        bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
-        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
-      }
-    } else {
-        // Hide the Bluetooth Image Layer
-      if(bluetooth_image != NULL) {
-        layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
-        bitmap_layer_destroy(bluetooth_layer);
-        gbitmap_destroy(bluetooth_image);
-        bluetooth_image = NULL;
-      }
-    }
+//    if(connected) {
+//        //Display the Bluetooth Image Layer
+//      if(bluetooth_image == NULL) {
+//        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
+//// TODO: Investigate adding layer to slot 2's layer
+//        GRect frame = (GRect) {
+//          .origin = { 105,135 },
+//          .size = bluetooth_image->bounds.size
+//        };
+//        bluetooth_layer = bitmap_layer_create(frame);
+//        bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
+//        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
+//      }
+//    } else {
+//        // Hide the Bluetooth Image Layer
+//      if(bluetooth_image != NULL) {
+//        layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
+//        bitmap_layer_destroy(bluetooth_layer);
+//        gbitmap_destroy(bluetooth_image);
+//        bluetooth_image = NULL;
+//      }
+//    }
     prev_bluetooth = connected;
   }  
 } //handle_connection
@@ -211,21 +216,19 @@ static void init () {
   window_stack_push(window,true);
     // Avoids a blank screen on watch start
   window_set_background_color(window,GColorBlack);
-    // Load the Bluetooth Image
-//TODO: Load the Bluetooth Image  
     // Initialize Time Tick Handler
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
   display_time(tick_time);
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
-  battery_state_service_subscribe(handle_power_level);
-  bluetooth_connection_service_subscribe(handle_connection);
+//  battery_state_service_subscribe(handle_power_level);
+//  bluetooth_connection_service_subscribe(handle_connection);
 } //init
 
 static void destroy () {
   tick_timer_service_unsubscribe();
-  battery_state_service_unsubscribe();
-  bluetooth_connection_service_unsubscribe();
+//  bluetooth_connection_service_unsubscribe();
+//  battery_state_service_unsubscribe();
   for(int i = 0;i < TOTAL_IMAGE_SLOTS;i++) {
     unload_digit_image_from_slot(i);
   }
