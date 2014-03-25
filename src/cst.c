@@ -172,7 +172,7 @@ static void handle_power_level (BatteryChargeState charge_state) {
   //     // Load and Display the Power Level Indicator
   //   power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
   //   GRect frame = (GRect) {
-  //     .origin = { 33,135 },
+  //     .origin = { 31,150 },
   //     .size = power_image->bounds.size
   //   };
   //   power_layer = bitmap_layer_create(frame);
@@ -184,28 +184,27 @@ static void handle_power_level (BatteryChargeState charge_state) {
 
 static void handle_connection (bool connected) {
   if(connected != prev_bluetooth) {
-//    if(connected) {
-//        //Display the Bluetooth Image Layer
-//      if(bluetooth_image == NULL) {
-//        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
-//// TODO: Investigate adding layer to slot 2's layer
-//        GRect frame = (GRect) {
-//          .origin = { 105,135 },
-//          .size = bluetooth_image->bounds.size
-//        };
-//        bluetooth_layer = bitmap_layer_create(frame);
-//        bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
-//        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
-//      }
-//    } else {
-//        // Hide the Bluetooth Image Layer
-//      if(bluetooth_image != NULL) {
-//        layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
-//        bitmap_layer_destroy(bluetooth_layer);
-//        gbitmap_destroy(bluetooth_image);
-//        bluetooth_image = NULL;
-//      }
-//    }
+    if(connected) {
+        //Display the Bluetooth Image Layer
+      if(bluetooth_image == NULL) {
+        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
+        GRect frame = (GRect) {
+          .origin = { 103,150 },
+          .size = bluetooth_image->bounds.size
+        };
+        bluetooth_layer = bitmap_layer_create(frame);
+        bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
+        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
+      }
+    } else {
+        // Hide the Bluetooth Image Layer
+      if(bluetooth_image != NULL) {
+        layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
+        bitmap_layer_destroy(bluetooth_layer);
+        gbitmap_destroy(bluetooth_image);
+        bluetooth_image = NULL;
+      }
+    }
     prev_bluetooth = connected;
   }  
 } //handle_connection
@@ -222,12 +221,12 @@ static void init () {
   display_time(tick_time);
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
 //  battery_state_service_subscribe(handle_power_level);
-//  bluetooth_connection_service_subscribe(handle_connection);
+  bluetooth_connection_service_subscribe(handle_connection);
 } //init
 
 static void destroy () {
   tick_timer_service_unsubscribe();
-//  bluetooth_connection_service_unsubscribe();
+  bluetooth_connection_service_unsubscribe();
 //  battery_state_service_unsubscribe();
   for(int i = 0;i < TOTAL_IMAGE_SLOTS;i++) {
     unload_digit_image_from_slot(i);
