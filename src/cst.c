@@ -56,7 +56,9 @@ const int POWER_IMAGE_RESOURCE_IDS[NUMBER_OF_POWER_IMAGES] = {
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
 static GBitmap *bluetooth_image = NULL;
+static BitmapLayer *bluetooth_layer;
 //static GBitmap *power_image = NULL;
+//static BitmapLayer *power_layer;
 
 #define EMPTY_SLOT -1
 
