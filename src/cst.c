@@ -57,8 +57,8 @@ static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
 static GBitmap *bluetooth_image = NULL;
 static BitmapLayer *bluetooth_layer;
-//static GBitmap *power_image = NULL;
-//static BitmapLayer *power_layer;
+static GBitmap *power_image = NULL;
+static BitmapLayer *power_layer;
 
 #define EMPTY_SLOT -1
 
@@ -164,24 +164,24 @@ static void handle_minute_tick (struct tm *tick_time,TimeUnits units_changed) {
 } //handle_minute_tick
 
 static void handle_power_level (BatteryChargeState charge_state) {
-  // short power_level = -1;
-  // if(charge_state.is_charging) {
-  //   power_level = 5;  
-  // } else {
-  //   power_level = charge_state.charge_percent / 20;
-  // }
-  // if(power_level != prev_power) {
-  //     // Load and Display the Power Level Indicator
-  //   power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
-  //   GRect frame = (GRect) {
-  //     .origin = { 31,150 },
-  //     .size = power_image->bounds.size
-  //   };
-  //   power_layer = bitmap_layer_create(frame);
-  //   bitmap_layer_set_bitmap(power_layer,power_image);
-  //   layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
-  //   prev_power = power_level;
-  // }
+   short power_level = -1;
+   if(charge_state.is_charging) {
+     power_level = 5;  
+   } else {
+     power_level = charge_state.charge_percent / 20;
+   }
+   if(power_level != prev_power) {
+       // Load and Display the Power Level Indicator
+     power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
+     GRect frame = (GRect) {
+       .origin = { 31,150 },
+       .size = power_image->bounds.size
+     };
+     power_layer = bitmap_layer_create(frame);
+     bitmap_layer_set_bitmap(power_layer,power_image);
+     layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
+     prev_power = power_level;
+   }
 } //handle_power_level
 
 static void handle_connection (bool connected) {
@@ -222,14 +222,14 @@ static void init () {
   struct tm *tick_time = localtime(&now);
   display_time(tick_time);
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
-//  battery_state_service_subscribe(handle_power_level);
+  battery_state_service_subscribe(handle_power_level);
   bluetooth_connection_service_subscribe(handle_connection);
 } //init
 
 static void destroy () {
   tick_timer_service_unsubscribe();
   bluetooth_connection_service_unsubscribe();
-//  battery_state_service_unsubscribe();
+  battery_state_service_unsubscribe();
   for(int i = 0;i < TOTAL_IMAGE_SLOTS;i++) {
     unload_digit_image_from_slot(i);
   }
