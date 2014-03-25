@@ -168,7 +168,7 @@ static void handle_power_level (BatteryChargeState charge_state) {
    if(charge_state.is_charging) {
      power_level = 5;  
    } else {
-     power_level = charge_state.charge_percent / 20;
+     power_level = (charge_state.charge_percent - 1) / 20;
    }
    if(power_level != prev_power) {
        // Load and Display the Power Level Indicator
