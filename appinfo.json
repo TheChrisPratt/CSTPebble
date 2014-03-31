@@ -12,6 +12,10 @@
     "watchapp": {
         "watchface": true
     },
+//    "capabilities": [ "configurable" ],
+//    "appKeys": {
+//        "test": 0
+//    },
     "resources": {
         "media": [
             {

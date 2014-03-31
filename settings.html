@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CST Big Time Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  </head>
+  <body>
+      <!-- Header -->
+    <h4 style="margin-left:25px; padding-bottom:10px">Choose your settings:</h4>
+      <!-- Settings Table -->
+    <table>
+      <tr>
+        <td style="padding-top:0; padding-left:25px; vertical-align:middle; display:table-cell;">Choose an option:</td>
+        <td><button id="test" type="button" class="multipleOption btn btn_default" style="width:100px; margin-left:20px;">0</button></td>
+      </tr>
+    </table>
+    <p style="text-align:center;"><button type="button" class="submit btn btn-success" style="width:100px;margin-top:20px;">Submit</button>
+      <!-- Footer -->
+    <br />
+    <footer style="width:200px;">
+      <p style="text-align:center;">Created by Anodyzed</p>
+    </footer>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script>
+      $(function() {
+        window.applicationCache.addEventListener("updateready",onUpdateReady);
+        function onUpdateReady () {
+          if(window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+            window.location.reload();
+          }
+        } //onUpdateReady
+
+        var dictionary;
+        try {
+          dictionary = JSON.parse(localStorage["dictionary"]);
+        } catch(x) {
+          dictionary = { test: 0 };
+        }
+        for(option in dictionary) {
+          if(dictionary[option]) {
+              /* Option */
+            if(option == "test") {
+              $('#' + option).html(dictionary[option]);
+            }
+          }
+        }
+
+        $(".multipOption").click(function() {
+          var new_val;
+          if(dictionary[$(this).attr("id"] >= 4)]) {
+            new_val = 0;
+          } else {
+            new_val = dictionary[$(this).attr("id")] + 1;
+          }
+          dictionary[$(this).attr("id")] = new_val;
+          localStorage["dictionary"] = JSON.stringify(dictionary);
+            /* Date Format */
+          if($(this).attr("id") == "test") {
+            $(this.html(dictionary[$(this).attr("id")]));
+          }
+        });
+
+        $(".submit").click(function() {
+          console.log(JSON.stringify(dictionary));
+          window.location.href = "pebblejs://close#" + encodeURIComponent(JSON.stringify(dictionary));
+        });
+      });
+    </script>
+  </body>
+</html>
