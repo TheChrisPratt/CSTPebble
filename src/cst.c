@@ -53,6 +53,23 @@ const int POWER_IMAGE_RESOURCE_IDS[NUMBER_OF_POWER_IMAGES] = {
   RESOURCE_ID_IMAGE_POWER_3, RESOURCE_ID_IMAGE_POWER_4, RESOURCE_ID_IMAGE_POWER_5
 };
 
+enum SettingsKeys {
+  ZERO_PREFIX = 0x00, // boolean (1 byte = 1)
+  SHOW_POWER  = 0x01, // boolean (1 byte = 2)
+  SHOW_BTOOTH = 0x02, // boolean (1 byte = 3)
+//  MONTH_FIRST = 0x03, // boolean (1 byte = 4)
+//  SUN_TEXT = 0x04,    // string (4 bytes = 8)
+//  MON_TEXT = 0x05,    // string (4 bytes = 12)
+//  TUE_TEXT = 0x06,    // string (4 bytes = 16)
+//  WED_TEXT = 0x07,    // string (4 bytes = 20)
+//  THU_TEXT = 0x08,    // string (4 bytes = 24)
+//  FRI_TEXT = 0x09,    // string (4 bytes = 28)
+//  SAT_TEXT = 0x0A     // string (4 bytes = 32)
+};
+
+static AppSync sync;
+static uint8_t sync_buffer[64];
+
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
 static GBitmap *bluetooth_image = NULL;
@@ -68,6 +85,46 @@ static int image_slot_state[TOTAL_IMAGE_SLOTS] = {EMPTY_SLOT, EMPTY_SLOT, EMPTY_
 static bool prev_bluetooth = false;
 static short prev_power = -1;
 
+static bool zero_prefix    = false;
+static bool show_power     = true;
+static bool show_bluetooth = true;
+
+/**
+ * Callback to notify when Application Settings change
+ *
+ */
+static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tuple,const Tuple *old_tuple,void *context) {
+  switch(key) {
+    case ZERO_PREFIX:
+      zero_prefix = new_tuple->value->int8;
+      time_t now = time(NULL);
+      struct tm *tick_time = localtime(&now);
+      display_time(tick_time);
+      persist_write_bool(ZERO_PREFIX,zero_prefix);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
+      break;
+    case SHOW_POWER:
+      show_power = new_tuple->value->int8;
+      handle_power_level(battery_state_service_peek());
+      persist_write_bool(SHOW_POWER,show_power);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
+      break;
+    case SHOW_BTOOTH:
+      show_bluetooth = new_tuple->value->int8;
+      handle_connection(bluetooth_connection_service_peek());
+      persist_write_bool(SHOW_POWER,show_power);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
+      break;
+  }
+} //sync_tuple_changed_callback
+
+/**
+ * Callback to notify when Application Sync Error occurred
+ */
+static void sync_error_callback (DictionaryResult dict_error,AppMessageResult app_message_error,void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR,"App Message Sync Error: %d",app_message_error);
+} //sync_error_callback
+
 /**
  * Loads the digit image from the application's resources and
  * displays it on-screen in the correct location.
@@ -80,14 +137,6 @@ static void load_digit_image_into_slot (int slot_number,int digit_value) {
     if((digit_value >= 0) && (digit_value <= 9)) {
       if(image_slot_state[slot_number] == EMPTY_SLOT) {
         images[slot_number] = gbitmap_create_with_resource(IMAGE_RESOURCE_IDS[digit_value]);
-// TODO: Finish investigation if sub-layer doesn't pan out        
-        // if((slot_number == 2) && (bluetooth_image != NULL)) {
-        //   GRect subframe = (GRect) {
-        //     .origin = { 33, 51 },
-        //     .size = { 6, 10 }
-        //   }
-        //   gbitmap_init_as_sub_bitmap(bluetooth_image,images[slot_number])
-        // }
         GRect frame = (GRect) {
           .origin = { (slot_number % 2) * 72,(slot_number / 2) * 74 },
           .size = images[slot_number]->bounds.size
@@ -95,6 +144,7 @@ static void load_digit_image_into_slot (int slot_number,int digit_value) {
         image_layers[slot_number] = bitmap_layer_create(frame);
         bitmap_layer_set_bitmap(image_layers[slot_number],images[slot_number]);
         layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(image_layers[slot_number]));
+        image_slot_state[slot_number] = digit;
       }
     }
   }
@@ -135,10 +185,9 @@ static void display_value (unsigned short value,unsigned short row_number) {
     short digit = value % 10;
     if(digit != image_slot_state[slot_number]) {
       unload_digit_image_from_slot(slot_number);
-      if((digit != 0) || (slot_number != 0)) {
+      if(zero_prefix || (digit != 0) || (slot_number != 0)) {
         load_digit_image_into_slot(slot_number,digit);
       }
-      image_slot_state[slot_number] = digit;
     }
     value /= 10;
   }
@@ -164,28 +213,30 @@ static void handle_minute_tick (struct tm *tick_time,TimeUnits units_changed) {
 } //handle_minute_tick
 
 static void handle_power_level (BatteryChargeState charge_state) {
-   short power_level = -1;
-   if(charge_state.is_charging) {
-     power_level = 5;  
-   } else {
-     power_level = (charge_state.charge_percent - 1) / 20;
-   }
-   if(power_level != prev_power) {
-       // Load and Display the Power Level Indicator
-     power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
-     GRect frame = (GRect) {
-       .origin = { 31,150 },
-       .size = power_image->bounds.size
-     };
-     power_layer = bitmap_layer_create(frame);
-     bitmap_layer_set_bitmap(power_layer,power_image);
-     layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
-     prev_power = power_level;
-   }
+  if(show_power) {
+    short power_level = -1;
+    if(charge_state.is_charging) {
+      power_level = 5;  
+    } else {
+      power_level = (charge_state.charge_percent - 1) / 20;
+    }
+    if(power_level != prev_power) {
+        // Load and Display the Power Level Indicator
+      power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
+      GRect frame = (GRect) {
+        .origin = { 31,150 },
+        .size = power_image->bounds.size
+      };
+      power_layer = bitmap_layer_create(frame);
+      bitmap_layer_set_bitmap(power_layer,power_image);
+      layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
+      prev_power = power_level;
+    }
+  }
 } //handle_power_level
 
 static void handle_connection (bool connected) {
-  if(connected != prev_bluetooth) {
+  if(show_bluetooth && (connected != prev_bluetooth)) {
     if(connected) {
         //Display the Bluetooth Image Layer
       if(bluetooth_image == NULL) {
@@ -211,12 +262,16 @@ static void handle_connection (bool connected) {
   }  
 } //handle_connection
 
-static void init () {
+static void app_init () {
     // Initialize Base Window
   window = window_create();
   window_stack_push(window,true);
     // Avoids a blank screen on watch start
   window_set_background_color(window,GColorBlack);
+    // Retrieve Settings
+  zero_prefix    = persist_exists(ZERO_PREFIX) ? persist_read_bool(ZERO_PREFIX) : false;
+  show_power     = persist_exists(SHOW_POWER)  ? persist_read_bool(SHOW_POWER)  : true;
+  show_bluetooth = persist_exists(SHOW_BTOOTH) ? persist_read_bool(SHOW_BTOOTH) : true;
     // Initialize Time Tick Handler
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
@@ -226,9 +281,16 @@ static void init () {
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
   battery_state_service_subscribe(handle_power_level);
   bluetooth_connection_service_subscribe(handle_connection);
-} //init
+    // Initialize the Sync Handler
+  Tuplet initial_values[] = {
+    TupletInteger(ZERO_PREFIX,false),
+    TupletInteger(SHOW_POWER,true),
+    TupletInteger(SHOW_BTOOTH,true)
+  }
+  app_sync_init(&sync,sync_buffer,sizeof(sync_buffer),initial_values,ARRAY_LENGTH(initial_values),sync_tuple_changed_callback,sync_error_callback,NULL);
+} //app_init
 
-static void destroy () {
+static void app_destroy () {
   tick_timer_service_unsubscribe();
   bluetooth_connection_service_unsubscribe();
   battery_state_service_unsubscribe();
@@ -236,10 +298,11 @@ static void destroy () {
     unload_digit_image_from_slot(i);
   }
   window_destroy(window);
-} //destroy
+  app_sync_deinit(&sync);
+} //app_destroy
 
 int main (void) {
-  init();
+  app_init();
   app_event_loop();
-  destroy();
+  app_destroy();
 } //main
