@@ -14,7 +14,17 @@
     },
     "capabilities": [ "configurable" ],
     "appKeys": {
-        "test": 0
+        "zero_prefix": 0,
+        "show_power": 1,
+        "show_btooth": 2,
+        "month_first": 3,
+        "sun_text": 4,
+        "mon_text": 5,
+        "tue_text": 6,
+        "wed_text": 7,
+        "thu_text": 8,
+        "fri_text": 9,
+        "sat_text": 10
     },
     "resources": {
         "media": [
