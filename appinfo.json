@@ -12,8 +12,8 @@
     "watchapp": {
         "watchface": true
     },
-    "~capabilities": [ "configurable" ],
-    "~appKeys": {
+    "capabilities": [ "configurable" ],
+    "appKeys": {
         "test": 0
     },
     "resources": {
