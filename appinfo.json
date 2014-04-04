@@ -1,14 +1,10 @@
 {
     "versionLabel": "1.1",
     "uuid": "676b3ccf-b6e2-4215-8458-26244ebb254e",
-    "appKeys": {},
-    "longName": "CST Big Time",
-    "versionCode": 1,
-    "capabilities": [
-        ""
-    ],
     "shortName": "CST",
+    "longName": "CST Big Time",
     "companyName": "Anodyzed",
+    "versionCode": 1,
     "watchapp": {
         "watchface": true
     },
