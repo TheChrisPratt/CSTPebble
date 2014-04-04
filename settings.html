@@ -11,8 +11,16 @@
       <!-- Settings Table -->
     <table>
       <tr>
-        <td style="padding-top:0; padding-left:25px; vertical-align:middle; display:table-cell;">Choose an option:</td>
-        <td><button id="test" type="button" class="multipleOption btn btn_default" style="width:100px; margin-left:20px;">0</button></td>
+        <th>Choose an option:</th>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="zero_prefix" style="width:100px; margin-left:20px;"> <label for="zero_prefix">Zero Prefix Hour Value?</label></td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="show_power" style="width:100px; margin-left:20px;"> <label for="show_power">Show Power Level Indicator?</label></td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="show_btooth" style="width:100px; margin-left:20px;"> <label for="show_btooth">Show Bluetooth Indicator?</label></td>
       </tr>
     </table>
     <p style="text-align:center;"><button type="button" class="submit btn btn-success" style="width:100px;margin-top:20px;">Submit</button>
@@ -35,30 +43,28 @@
         try {
           dictionary = JSON.parse(localStorage["dictionary"]);
         } catch(x) {
-          dictionary = { test: 0 };
+          dictionary = { 
+            zero_prefix: "false",
+            show_power: "true",
+            show_btooth: "true"
+          };
         }
         for(option in dictionary) {
           if(dictionary[option]) {
               /* Option */
-            if(option == "test") {
-              $('#' + option).html(dictionary[option]);
+            if((option == "zero_prefix") || (option == "show_power") || (option == "show_btooth")) {
+              $('#' + option).prop("checked",(dictionary[option] == "true"));
+            } else if(option == "test") {
+                // Remove the "test" element
+              delete(dictionary[option]);
+              localStorage["dictionary"] = JSON.stringify(dictionary);
             }
           }
         }
 
-        $(".multipOption").click(function() {
-          var new_val;
-          if(dictionary[$(this).attr("id"] >= 4)]) {
-            new_val = 0;
-          } else {
-            new_val = dictionary[$(this).attr("id")] + 1;
-          }
-          dictionary[$(this).attr("id")] = new_val;
+        $(":checkbox").on("change",function() {
+          dictionary[$(this).attr("id")] = (this.checked) ? "true" : "false";
           localStorage["dictionary"] = JSON.stringify(dictionary);
-            /* Date Format */
-          if($(this).attr("id") == "test") {
-            $(this.html(dictionary[$(this).attr("id")]));
-          }
         });
 
         $(".submit").click(function() {
