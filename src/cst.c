@@ -90,35 +90,6 @@ static bool show_power     = true;
 static bool show_bluetooth = true;
 
 /**
- * Callback to notify when Application Settings change
- *
- */
-static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tuple,const Tuple *old_tuple,void *context) {
-  switch(key) {
-    case ZERO_PREFIX:
-      zero_prefix = new_tuple->value->int8;
-      time_t now = time(NULL);
-      struct tm *tick_time = localtime(&now);
-      display_time(tick_time);
-      persist_write_bool(ZERO_PREFIX,zero_prefix);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
-      break;
-    case SHOW_POWER:
-      show_power = new_tuple->value->int8;
-      handle_power_level(battery_state_service_peek());
-      persist_write_bool(SHOW_POWER,show_power);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
-      break;
-    case SHOW_BTOOTH:
-      show_bluetooth = new_tuple->value->int8;
-      handle_connection(bluetooth_connection_service_peek());
-      persist_write_bool(SHOW_POWER,show_power);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
-      break;
-  }
-} //sync_tuple_changed_callback
-
-/**
  * Callback to notify when Application Sync Error occurred
  */
 static void sync_error_callback (DictionaryResult dict_error,AppMessageResult app_message_error,void *context) {
@@ -144,7 +115,7 @@ static void load_digit_image_into_slot (int slot_number,int digit_value) {
         image_layers[slot_number] = bitmap_layer_create(frame);
         bitmap_layer_set_bitmap(image_layers[slot_number],images[slot_number]);
         layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(image_layers[slot_number]));
-        image_slot_state[slot_number] = digit;
+        image_slot_state[slot_number] = digit_value;
       }
     }
   }
@@ -262,6 +233,34 @@ static void handle_connection (bool connected) {
   }  
 } //handle_connection
 
+/**
+ * Callback to notify when Application Settings change
+ */
+static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tuple,const Tuple *old_tuple,void *context) {
+  switch(key) {
+    case ZERO_PREFIX:
+      zero_prefix = new_tuple->value->int8;
+      time_t now = time(NULL);
+      struct tm *tick_time = localtime(&now);
+      display_time(tick_time);
+      persist_write_bool(ZERO_PREFIX,zero_prefix);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
+      break;
+    case SHOW_POWER:
+      show_power = new_tuple->value->int8;
+      handle_power_level(battery_state_service_peek());
+      persist_write_bool(SHOW_POWER,show_power);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
+      break;
+    case SHOW_BTOOTH:
+      show_bluetooth = new_tuple->value->int8;
+      handle_connection(bluetooth_connection_service_peek());
+      persist_write_bool(SHOW_POWER,show_power);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
+      break;
+  }
+} //sync_tuple_changed_callback
+
 static void app_init () {
     // Initialize Base Window
   window = window_create();
@@ -286,7 +285,7 @@ static void app_init () {
     TupletInteger(ZERO_PREFIX,false),
     TupletInteger(SHOW_POWER,true),
     TupletInteger(SHOW_BTOOTH,true)
-  }
+  };
   app_sync_init(&sync,sync_buffer,sizeof(sync_buffer),initial_values,ARRAY_LENGTH(initial_values),sync_tuple_changed_callback,sync_error_callback,NULL);
 } //app_init
 
