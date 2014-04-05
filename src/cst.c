@@ -76,9 +76,9 @@ static uint8_t sync_buffer[64];
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
 static GBitmap *bluetooth_image = NULL;
-static BitmapLayer *bluetooth_layer;
+static BitmapLayer *bluetooth_layer = NULL;
 static GBitmap *power_image = NULL;
-static BitmapLayer *power_layer;
+static BitmapLayer *power_layer = NULL;
 
 #define EMPTY_SLOT -1
 
@@ -88,9 +88,9 @@ static int image_slot_state[TOTAL_IMAGE_SLOTS] = {EMPTY_SLOT, EMPTY_SLOT, EMPTY_
 static bool prev_bluetooth = false;
 static short prev_power = -1;
 
-static bool zero_prefix    = false;
-static bool show_power     = true;
-static bool show_bluetooth = true;
+static volatile bool zero_prefix    = false;
+static volatile bool show_power     = true;
+static volatile bool show_bluetooth = true;
 
 /**
  * Callback to notify when Application Sync Error occurred
@@ -149,7 +149,7 @@ static void unload_digit_image_from_slot (int slot_number) {
  * Includes optional blanking of first leading zero,
  *   i.e. displays ' 0' rather than '00'.
  */
-static void display_value (unsigned short value,unsigned short row_number) {
+static void display_value (unsigned short value,unsigned short row_number,bool changed) {
   value %= 100; // Maximum of two digits per row.
     // Column order is: | Column 0 | Column 1 |
     // (We process the columns in reverse order because that makes
@@ -157,7 +157,7 @@ static void display_value (unsigned short value,unsigned short row_number) {
   for(int col_number = 1;col_number >= 0;col_number--) {
     int slot_number = (row_number * 2) + col_number;
     short digit = value % 10;
-    if(digit != image_slot_state[slot_number]) {
+    if(changed || (digit != image_slot_state[slot_number])) {
       unload_digit_image_from_slot(slot_number);
       if(zero_prefix || (digit != 0) || (slot_number != 0)) {
         load_digit_image_into_slot(slot_number,digit);
@@ -177,13 +177,13 @@ static unsigned short get_display_hour (unsigned short hour) {
   }
 } //get_display_hour
 
-static void display_time (struct tm *tick_time) {
-  display_value(get_display_hour(tick_time->tm_hour),0);
-  display_value(tick_time->tm_min,1);
+static void display_time (struct tm *tick_time,bool changed) {
+  display_value(get_display_hour(tick_time->tm_hour),0,changed);
+  display_value(tick_time->tm_min,1,changed);
 } //display_time
 
 static void handle_minute_tick (struct tm *tick_time,TimeUnits units_changed) {
-  display_time(tick_time);
+  display_time(tick_time,false);
 } //handle_minute_tick
 
 static void handle_power_level (BatteryChargeState charge_state) {
@@ -201,40 +201,79 @@ static void handle_power_level (BatteryChargeState charge_state) {
         .origin = { 31,150 },
         .size = power_image->bounds.size
       };
-      power_layer = bitmap_layer_create(frame);
+      if(power_layer == NULL) {
+        power_layer = bitmap_layer_create(frame);
+      }
       bitmap_layer_set_bitmap(power_layer,power_image);
       layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(power_layer));
       prev_power = power_level;
     }
+  } else {
+    if(power_image != NULL) {
+      layer_remove_from_parent(bitmap_layer_get_layer(power_layer));
+      bitmap_layer_destroy(power_layer);
+      power_layer = NULL;
+      gbitmap_destroy(power_image);
+      power_image = NULL;
+      prev_power = -1;
+    }
   }
 } //handle_power_level
 
+static void hide_bluetooth () {
+  layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
+  bitmap_layer_destroy(bluetooth_layer);
+  bluetooth_layer = NULL;
+  gbitmap_destroy(bluetooth_image);
+  bluetooth_image = NULL;
+} //hide_bluetooth
+
 static void handle_connection (bool connected) {
-  if(show_bluetooth && (connected != prev_bluetooth)) {
-    if(connected) {
-        //Display the Bluetooth Image Layer
-      if(bluetooth_image == NULL) {
-        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
-        GRect frame = (GRect) {
-          .origin = { 103,150 },
-          .size = bluetooth_image->bounds.size
-        };
-        bluetooth_layer = bitmap_layer_create(frame);
-        bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
-        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
+  if(show_bluetooth) {
+    if(connected != prev_bluetooth) {
+      if(connected) {
+          //Display the Bluetooth Image Layer
+        if(bluetooth_image == NULL) {
+          bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
+          GRect frame = (GRect) {
+            .origin = { 103,150 },
+            .size = bluetooth_image->bounds.size
+          };
+          if(bluetooth_layer == NULL) {
+            bluetooth_layer = bitmap_layer_create(frame);
+          }
+          bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
+          layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
+        }
+      } else {
+          // Hide the Bluetooth Image Layer
+        if(bluetooth_image != NULL) {
+          hide_bluetooth();
+        }
       }
-    } else {
-        // Hide the Bluetooth Image Layer
-      if(bluetooth_image != NULL) {
-        layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
-        bitmap_layer_destroy(bluetooth_layer);
-        gbitmap_destroy(bluetooth_image);
-        bluetooth_image = NULL;
-      }
+      prev_bluetooth = connected;
+    }  
+  } else {
+      // Hide the Bluetooth Image Layer
+    if(bluetooth_image != NULL) {
+      hide_bluetooth();
+      prev_bluetooth = false;
     }
-    prev_bluetooth = connected;
-  }  
+  }    
 } //handle_connection
+
+static bool get_tuple_bool_value (const Tuple * tuple) {
+  switch(tuple->type) {
+    case TUPLE_CSTRING:
+      return tuple->length == 5;
+    case TUPLE_INT:
+      return tuple->value->int32 != 0;
+    case TUPLE_UINT:
+      return tuple->value->uint32 != 0;
+    default:
+      return false;
+  }
+} //get_tuple_bool_value
 
 /**
  * Callback to notify when Application Settings change
@@ -243,24 +282,24 @@ static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tup
   APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: %ld, Type: %d, Length: %d",new_tuple->key,new_tuple->type,new_tuple->length);
   switch(key) {
     case ZERO_PREFIX:
-      zero_prefix = new_tuple->value->int8;
+      zero_prefix = get_tuple_bool_value(new_tuple);
       time_t now = time(NULL);
       struct tm *tick_time = localtime(&now);
-      display_time(tick_time);
+      display_time(tick_time,true);
       persist_write_bool(ZERO_PREFIX,zero_prefix);
       APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
       break;
     case SHOW_POWER:
-      show_power = new_tuple->value->int8;
+      show_power = get_tuple_bool_value(new_tuple);
       handle_power_level(battery_state_service_peek());
       persist_write_bool(SHOW_POWER,show_power);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting to watch = %s",show_power ? "true" : "false");
       break;
     case SHOW_BTOOTH:
-      show_bluetooth = new_tuple->value->int8;
+      show_bluetooth = get_tuple_bool_value(new_tuple);
       handle_connection(bluetooth_connection_service_peek());
-      persist_write_bool(SHOW_POWER,show_power);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting t watch = %s",show_power ? "true" : "false");
+      persist_write_bool(SHOW_POWER,show_bluetooth);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Bluetooth Indicator Setting to watch = %s",show_bluetooth ? "true" : "false");
       break;
   }
 } //sync_tuple_changed_callback
@@ -289,7 +328,7 @@ static void app_init () {
     // Initialize Time Tick Handler
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
-  display_time(tick_time);
+  display_time(tick_time,true);
   handle_power_level(battery_state_service_peek());
   handle_connection(bluetooth_connection_service_peek());
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
