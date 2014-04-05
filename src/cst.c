@@ -240,7 +240,7 @@ static void handle_connection (bool connected) {
  * Callback to notify when Application Settings change
  */
 static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tuple,const Tuple *old_tuple,void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: %d, Type: %d, Length: %d",new_tuple->key,new_tuple->type,new_tuple->length);
+  APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: %ld, Type: %d, Length: %d",new_tuple->key,new_tuple->type,new_tuple->length);
   switch(key) {
     case ZERO_PREFIX:
       zero_prefix = new_tuple->value->int8;
@@ -269,7 +269,7 @@ static void send_cmd (void) {
   Tuplet value = TupletInteger(1,1);
   DictionaryIterator *i;
   app_message_outbox_begin(&i);
-  if(i != null) {
+  if(i != NULL) {
     dict_write_tuplet(i,&value);
     dict_write_end(i);
     app_message_outbox_send();
