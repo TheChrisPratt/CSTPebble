@@ -53,6 +53,9 @@ const int POWER_IMAGE_RESOURCE_IDS[NUMBER_OF_POWER_IMAGES] = {
   RESOURCE_ID_IMAGE_POWER_3, RESOURCE_ID_IMAGE_POWER_4, RESOURCE_ID_IMAGE_POWER_5
 };
 
+const int INBOX_SIZE = 128;
+const int OUTBOX_SIZE = 128;
+
 enum SettingsKeys {
   ZERO_PREFIX = 0x00, // boolean (1 byte = 1)
   SHOW_POWER  = 0x01, // boolean (1 byte = 2)
@@ -237,6 +240,7 @@ static void handle_connection (bool connected) {
  * Callback to notify when Application Settings change
  */
 static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tuple,const Tuple *old_tuple,void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: " + new_tuple->key + ", Type: " + new_tuple->type + ", Length: " + new_tuple->length);
   switch(key) {
     case ZERO_PREFIX:
       zero_prefix = new_tuple->value->int8;
@@ -260,6 +264,17 @@ static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tup
       break;
   }
 } //sync_tuple_changed_callback
+
+static void send_cmd (void) {
+  Tuplet value = TupletInteger(1,1);
+  DictionaryIterator *i;
+  app_message_outbox_begin(&i);
+  if(i != null) {
+    dict_write_tuplet(i,&value);
+    dict_write_end(i);
+    app_message_outbox_send();
+  }
+} //send_cmd
 
 static void app_init () {
     // Initialize Base Window
@@ -287,6 +302,8 @@ static void app_init () {
     TupletInteger(SHOW_BTOOTH,true)
   };
   app_sync_init(&sync,sync_buffer,sizeof(sync_buffer),initial_values,ARRAY_LENGTH(initial_values),sync_tuple_changed_callback,sync_error_callback,NULL);
+  send_cmd();
+  app_message_open(INBOX_SIZE,OUTBOX_SIZE);
 } //app_init
 
 static void app_destroy () {
