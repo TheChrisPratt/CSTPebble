@@ -33,6 +33,7 @@
     <script>
       $(function() {
         window.applicationCache.addEventListener("updateready",onUpdateReady);
+
         function onUpdateReady () {
           if(window.applicationCache.status === window.applicationCache.UPDATEREADY) {
             window.location.reload();
@@ -44,16 +45,16 @@
           dictionary = JSON.parse(localStorage["dictionary"]);
         } catch(x) {
           dictionary = { 
-            zero_prefix: "false",
-            show_power: "true",
-            show_btooth: "true"
+            zero_prefix: false,
+            show_power: true,
+            show_btooth: true
           };
         }
         for(option in dictionary) {
           if(dictionary[option]) {
               /* Option */
             if((option == "zero_prefix") || (option == "show_power") || (option == "show_btooth")) {
-              $('#' + option).prop("checked",(dictionary[option] == "true"));
+              $('#' + option).prop("checked",dictionary[option]);
             } else if(option == "test") {
                 // Remove the "test" element
               delete(dictionary[option]);
@@ -63,7 +64,7 @@
         }
 
         $(":checkbox").on("change",function() {
-          dictionary[$(this).attr("id")] = (this.checked) ? "true" : "false";
+          dictionary[$(this).attr("id")] = this.checked;
           localStorage["dictionary"] = JSON.stringify(dictionary);
         });
 
