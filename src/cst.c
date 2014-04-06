@@ -95,7 +95,7 @@ static volatile bool zero_prefix    = false;
 static volatile bool show_power     = true;
 static volatile bool show_bluetooth = true;
 static volatile bool month_first    = true;
-static char *day_text[7];
+static char day_text[7][4];
 
 /**
  * Callback to notify when Application Sync Error occurred
@@ -190,7 +190,7 @@ static void display_time (struct tm *tick_time,bool changed) {
 static void display_date (struct tm *tick_time) {
   int date1 = (month_first) ? tick_time->tm_mon : tick_time->tm_mday;
   int date2 = (month_first) ? tick_time->tm_mday : tick_time->tm_mon;
-  sprintf(date,"%s %d/%d",day_text[tick_time->tm_wday],date1,date2);
+  snprintf(date,16,"%s %d/%d",day_text[tick_time->tm_wday],date1,date2);
   text_layer_set_text(text_layer,date);
 } //display_date
 
@@ -306,8 +306,6 @@ static bool get_tuple_bool_value (const Tuple * tuple) {
 } //get_tuple_bool_value
 
 static void sync_day_text (const Tuple *tuple,int key,int day) {
-  free(day_text[day]);
-  day_text[day] = malloc(tuple->length);
   strcpy(day_text[day],tuple->value->cstring);
   if(prev_day == day) {
     update_date();
@@ -387,14 +385,10 @@ static void send_cmd (void) {
   }
 } //send_cmd
 
-static char *persist_get_string (const uint32_t key,char *def) {
-  char *buffer;
+static char *persist_get_string (const uint32_t key,char *buffer,char *def) {
   if(persist_exists(key)) {
-    int len = persist_get_size(key);
-    buffer = malloc(len);
-    persist_read_string(key,buffer,len);
+    persist_read_string(key,buffer,persist_get_size(key));
   } else {
-    buffer = malloc(strlen(def) + 1);
     strcpy(buffer,def);
   }
   return buffer;
@@ -411,13 +405,13 @@ static void app_init () {
   show_power     = persist_exists(SHOW_POWER)  ? persist_read_bool(SHOW_POWER)  : true;
   show_bluetooth = persist_exists(SHOW_BTOOTH) ? persist_read_bool(SHOW_BTOOTH) : true;
   month_first    = persist_exists(MONTH_FIRST) ? persist_read_bool(MONTH_FIRST) : true;
-  day_text[0]    = persist_get_string(SUN_TEXT,"Su");
-  day_text[1]    = persist_get_string(MON_TEXT,"Mo");
-  day_text[2]    = persist_get_string(TUE_TEXT,"Tu");
-  day_text[3]    = persist_get_string(WED_TEXT,"We");
-  day_text[4]    = persist_get_string(THU_TEXT,"Th");
-  day_text[5]    = persist_get_string(FRI_TEXT,"Fr");
-  day_text[6]    = persist_get_string(SAT_TEXT,"Sa");
+  persist_get_string(SUN_TEXT,day_text[0],"Su");
+  persist_get_string(MON_TEXT,day_text[1],"Mo");
+  persist_get_string(TUE_TEXT,day_text[2],"Tu");
+  persist_get_string(WED_TEXT,day_text[3],"We");
+  persist_get_string(THU_TEXT,day_text[4],"Th");
+  persist_get_string(FRI_TEXT,day_text[5],"Fr");
+  persist_get_string(SAT_TEXT,day_text[6],"Sa");
     // Initialize Time Tick Handler
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
@@ -466,9 +460,6 @@ static void app_destroy () {
   text_layer_destroy(text_layer);
   window_destroy(window);
   app_sync_deinit(&sync);
-  for(int i = 0;i < 7;i++) {
-    free(day_text[i]);
-  }
 } //app_destroy
 
 int main (void) {
