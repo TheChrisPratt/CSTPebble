@@ -89,13 +89,13 @@ static int image_slot_state[TOTAL_IMAGE_SLOTS] = {EMPTY_SLOT, EMPTY_SLOT, EMPTY_
 static bool prev_bluetooth = false;
 static short prev_power = -1;
 static int prev_day = -1;
-static char[16] date;
+static char date[16];
 
 static volatile bool zero_prefix    = false;
 static volatile bool show_power     = true;
 static volatile bool show_bluetooth = true;
 static volatile bool month_first    = true;
-static volatile char *day_text[7];
+static char *day_text[7];
 
 /**
  * Callback to notify when Application Sync Error occurred
@@ -196,9 +196,9 @@ static void display_date (struct tm *tick_time) {
 
 static void handle_minute_tick (struct tm *tick_time,TimeUnits units_changed) {
   display_time(tick_time,false);
-  if(prev_day != time_tick->tm_wday) {
+  if(prev_day != tick_time->tm_wday) {
     display_date(tick_time);
-    prev_day = time_tick->tm_wday;
+    prev_day = tick_time->tm_wday;
   }
 } //handle_minute_tick
 
@@ -210,7 +210,7 @@ static void update_time () {
 
 static void update_date () {
   time_t now = time(NULL);
-  struct TM *tick_time = localtime(&now);
+  struct tm *tick_time = localtime(&now);
   display_date(tick_time);
 } //update_date
 
@@ -390,7 +390,7 @@ static void send_cmd (void) {
 static char *persist_get_string (const uint32_t key,char *def) {
   char *buffer;
   if(persist_exists(key)) {
-    int len = persist_get_length(key);
+    int len = persist_get_size(key);
     buffer = malloc(len);
     persist_read_string(key,buffer,len);
   } else {
@@ -401,7 +401,6 @@ static char *persist_get_string (const uint32_t key,char *def) {
 } //persist_get_string
 
 static void app_init () {
-  int len;
     // Initialize Base Window
   window = window_create();
   window_stack_push(window,true);
@@ -435,7 +434,7 @@ static void app_init () {
   text_layer_set_text_alignment(text_layer,GTextAlignmentCenter);
   text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
   display_date(tick_time);
-  prev_day = tm->tm_wday;
+  prev_day = tick_time->tm_wday;
   layer_add_child(window_get_root_layer(window),text_layer_get_layer(text_layer));
 
     // Initialize the Sync Handler
