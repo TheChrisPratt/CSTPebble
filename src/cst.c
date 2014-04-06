@@ -227,7 +227,7 @@ static void handle_power_level (BatteryChargeState charge_state) {
       power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
       GRect frame = (GRect) {
 //        .origin = { 31,150 }, <-- Centered under tens digits
-        .origin = { 2,150 },    //  Left aligned (2px border)
+        .origin = { 5,150 },    //  Left aligned (5px border)
         .size = power_image->bounds.size
       };
       if(power_layer == NULL) {
@@ -266,7 +266,7 @@ static void handle_connection (bool connected) {
           bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
           GRect frame = (GRect) {
 //            .origin = { 103,150 }, <-- Centered under ones digits
-            .origin = { 132,150 },   //  Right aligned (2px border)
+            .origin = { 129,150 },   //  Right aligned (5px border)
             .size = bluetooth_image->bounds.size
           };
           if(bluetooth_layer == NULL) {
@@ -422,11 +422,15 @@ static void app_init () {
   battery_state_service_subscribe(handle_power_level);
   bluetooth_connection_service_subscribe(handle_connection);
 
-  text_layer = text_layer_create(GRect(14,148,130,168));
+  GRect rect = (GRect) {
+    .origin = { 17,148 },
+      .size = { 110,20 }
+  };
+  text_layer = text_layer_create(rect);
   text_layer_set_text_color(text_layer,GColorWhite);
   text_layer_set_background_color(text_layer,GColorBlack);
   text_layer_set_text_alignment(text_layer,GTextAlignmentCenter);
-  text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   display_date(tick_time);
   prev_day = tick_time->tm_wday;
   layer_add_child(window_get_root_layer(window),text_layer_get_layer(text_layer));
@@ -443,7 +447,7 @@ static void app_init () {
     TupletCString(WED_TEXT,day_text[3]),
     TupletCString(THU_TEXT,day_text[4]),
     TupletCString(FRI_TEXT,day_text[5]),
-    TupletCString(SAT_TEXT,day_text[6]),
+    TupletCString(SAT_TEXT,day_text[6])
   };
   app_sync_init(&sync,sync_buffer,sizeof(sync_buffer),initial_values,ARRAY_LENGTH(initial_values),sync_tuple_changed_callback,sync_error_callback,NULL);
   send_cmd();
