@@ -22,6 +22,39 @@
       <tr>
         <td><input type="checkbox" id="show_btooth" style="width:100px; margin-left:20px;"> <label for="show_btooth">Show Bluetooth Indicator?</label></td>
       </tr>
+      <tr>
+        <td>
+          <label for="month_first">Date Format</label> 
+          <select id="month_first">
+            <option value="true">MM/DD</option>
+            <option value="false">DD/MM</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th>Weekday Abbreviations</th>
+      </tr>
+      <tr>
+        <td>Sunday: <input type="text" id="sun_text" maxlength="3" /></td>
+      </tr>
+      <tr>
+        <td>Monday: <input type="text" id="mon_text" maxlength="3" /></td>
+      </tr>
+      <tr>
+        <td>Tuesday: <input type="text" id="tue_text" maxlength="3" /></td>
+      </tr>
+      <tr>
+        <td>Wednesday: <input type="text" id="wed_text" maxlength="3" /></td>
+      </tr>
+      <tr>
+        <td>Thursday: <input type="text" id="thu_text" maxlength="3" /></td>
+      </tr>
+      <tr>
+        <td>Friday: <input type="text" id="fri_text" maxlength="3" /></td>
+      </tr>
+      <tr>
+        <td>Saturday: <input type="text" id="sat_text" maxlength="3" /></td>
+      </tr>
     </table>
     <p style="text-align:center;"><button type="button" class="submit btn btn-success" style="width:100px;margin-top:20px;">Submit</button>
       <!-- Footer -->
@@ -43,28 +76,54 @@
         var dictionary;
         try {
           dictionary = JSON.parse(localStorage["dictionary"]);
+          if(!dictionary.hasOwnProperty("month_first")) {
+            dictionary["month_first"] = true;
+            dictionary["sun_text"] = "Su";
+            dictionary["mon_text"] = "Mo";
+            dictionary["tue_text"] = "Tu";
+            dictionary["wed_text"] = "We";
+            dictionary["thu_text"] = "Th";
+            dictionary["fri_text"] = "Fr";
+            dictionary["sat_text"] = "Sa";
+          }
         } catch(x) {
           dictionary = { 
             zero_prefix: false,
             show_power: true,
-            show_btooth: true
+            show_btooth: true,
+            month_first: true,
+            sun_text: "Su",
+            mon_text: "Mo",
+            tue_text: "Tu",
+            wed_text: "We",
+            thu_text: "Th",
+            fri_text: "Fr",
+            sat_text: "Sa"
           };
         }
         for(option in dictionary) {
           if(dictionary[option]) {
               /* Option */
-            if((option == "zero_prefix") || (option == "show_power") || (option == "show_btooth")) {
-              $('#' + option).prop("checked",dictionary[option]);
-            } else if(option == "test") {
-                // Remove the "test" element
-              delete(dictionary[option]);
-              localStorage["dictionary"] = JSON.stringify(dictionary);
+            switch(option) {
+              case "zero_prefix":
+              case "show_power":
+              case "show_btooth":
+                $('#' + option).prop("checked",dictionary[option]);
+                break;
+              default:
+                $('#' + option).val(dictionary[option]);
+                break;
             }
           }
         }
 
         $(":checkbox").on("change",function() {
           dictionary[$(this).attr("id")] = this.checked;
+          localStorage["dictionary"] = JSON.stringify(dictionary);
+        });
+
+        $(":text,select").on("change",function() {
+          dictionary[$(this).attr("id")] = $(this).val();
           localStorage["dictionary"] = JSON.stringify(dictionary);
         });
 

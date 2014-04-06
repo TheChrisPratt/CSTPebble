@@ -60,14 +60,14 @@ enum SettingsKeys {
   ZERO_PREFIX = 0x00, // boolean (1 byte = 1)
   SHOW_POWER  = 0x01, // boolean (1 byte = 2)
   SHOW_BTOOTH = 0x02, // boolean (1 byte = 3)
-//  MONTH_FIRST = 0x03, // boolean (1 byte = 4)
-//  SUN_TEXT = 0x04,    // string (4 bytes = 8)
-//  MON_TEXT = 0x05,    // string (4 bytes = 12)
-//  TUE_TEXT = 0x06,    // string (4 bytes = 16)
-//  WED_TEXT = 0x07,    // string (4 bytes = 20)
-//  THU_TEXT = 0x08,    // string (4 bytes = 24)
-//  FRI_TEXT = 0x09,    // string (4 bytes = 28)
-//  SAT_TEXT = 0x0A     // string (4 bytes = 32)
+  MONTH_FIRST = 0x03, // boolean (1 byte = 4)
+  SUN_TEXT = 0x04,    // string (4 bytes = 8)
+  MON_TEXT = 0x05,    // string (4 bytes = 12)
+  TUE_TEXT = 0x06,    // string (4 bytes = 16)
+  WED_TEXT = 0x07,    // string (4 bytes = 20)
+  THU_TEXT = 0x08,    // string (4 bytes = 24)
+  FRI_TEXT = 0x09,    // string (4 bytes = 28)
+  SAT_TEXT = 0x0A     // string (4 bytes = 32)
 };
 
 static AppSync sync;
@@ -79,6 +79,7 @@ static GBitmap *bluetooth_image = NULL;
 static BitmapLayer *bluetooth_layer = NULL;
 static GBitmap *power_image = NULL;
 static BitmapLayer *power_layer = NULL;
+static TextLayer *text_layer = NULL;
 
 #define EMPTY_SLOT -1
 
@@ -87,10 +88,14 @@ static BitmapLayer *power_layer = NULL;
 static int image_slot_state[TOTAL_IMAGE_SLOTS] = {EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT};
 static bool prev_bluetooth = false;
 static short prev_power = -1;
+static int prev_day = -1;
+static char[16] date;
 
 static volatile bool zero_prefix    = false;
 static volatile bool show_power     = true;
 static volatile bool show_bluetooth = true;
+static volatile bool month_first    = true;
+static volatile char *day_text[7];
 
 /**
  * Callback to notify when Application Sync Error occurred
@@ -182,9 +187,32 @@ static void display_time (struct tm *tick_time,bool changed) {
   display_value(tick_time->tm_min,1,changed);
 } //display_time
 
+static void display_date (struct tm *tick_time) {
+  int date1 = (month_first) ? tick_time->tm_mon : tick_time->tm_mday;
+  int date2 = (month_first) ? tick_time->tm_mday : tick_time->tm_mon;
+  sprintf(date,"%s %d/%d",day_text[tick_time->tm_wday],date1,date2);
+  text_layer_set_text(text_layer,date);
+} //display_date
+
 static void handle_minute_tick (struct tm *tick_time,TimeUnits units_changed) {
   display_time(tick_time,false);
+  if(prev_day != time_tick->tm_wday) {
+    display_date(tick_time);
+    prev_day = time_tick->tm_wday;
+  }
 } //handle_minute_tick
+
+static void update_time () {
+  time_t now = time(NULL);
+  struct tm *tick_time = localtime(&now);
+  display_time(tick_time,true);
+} //update_time
+
+static void update_date () {
+  time_t now = time(NULL);
+  struct TM *tick_time = localtime(&now);
+  display_date(tick_time);
+} //update_date
 
 static void handle_power_level (BatteryChargeState charge_state) {
   if(show_power) {
@@ -198,7 +226,8 @@ static void handle_power_level (BatteryChargeState charge_state) {
         // Load and Display the Power Level Indicator
       power_image = gbitmap_create_with_resource(POWER_IMAGE_RESOURCE_IDS[power_level]);
       GRect frame = (GRect) {
-        .origin = { 31,150 },
+//        .origin = { 31,150 }, <-- Centered under tens digits
+        .origin = { 2,150 },    //  Left aligned (2px border)
         .size = power_image->bounds.size
       };
       if(power_layer == NULL) {
@@ -236,7 +265,8 @@ static void handle_connection (bool connected) {
         if(bluetooth_image == NULL) {
           bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
           GRect frame = (GRect) {
-            .origin = { 103,150 },
+//            .origin = { 103,150 }, <-- Centered under ones digits
+            .origin = { 132,150 },   //  Right aligned (2px border)
             .size = bluetooth_image->bounds.size
           };
           if(bluetooth_layer == NULL) {
@@ -275,6 +305,16 @@ static bool get_tuple_bool_value (const Tuple * tuple) {
   }
 } //get_tuple_bool_value
 
+static void sync_day_text (const Tuple *tuple,int key,int day) {
+  free(day_text[day]);
+  day_text[day] = malloc(tuple->length);
+  strcpy(day_text[day],tuple->value->cstring);
+  if(prev_day == day) {
+    update_date();
+  }
+  persist_write_string(key,day_text[day]);
+} //sync_day_text
+
 /**
  * Callback to notify when Application Settings change
  */
@@ -283,9 +323,7 @@ static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tup
   switch(key) {
     case ZERO_PREFIX:
       zero_prefix = get_tuple_bool_value(new_tuple);
-      time_t now = time(NULL);
-      struct tm *tick_time = localtime(&now);
-      display_time(tick_time,true);
+      update_time();
       persist_write_bool(ZERO_PREFIX,zero_prefix);
       APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
       break;
@@ -301,6 +339,40 @@ static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tup
       persist_write_bool(SHOW_POWER,show_bluetooth);
       APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Bluetooth Indicator Setting to watch = %s",show_bluetooth ? "true" : "false");
       break;
+    case MONTH_FIRST:
+      month_first = get_tuple_bool_value(new_tuple);
+      update_date();
+      persist_write_bool(MONTH_FIRST,month_first);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Month First Indicator to watch = %s",month_first ? "month first" : "day first");
+      break;
+    case SUN_TEXT:
+      sync_day_text(new_tuple,SUN_TEXT,0);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Sunday Text to watch = %s",day_text[0]);
+      break;
+    case MON_TEXT:
+      sync_day_text(new_tuple,MON_TEXT,1);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Monday Text to watch = %s",day_text[1]);
+      break;
+    case TUE_TEXT:
+      sync_day_text(new_tuple,TUE_TEXT,2);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Tuesday Text to watch = %s",day_text[2]);
+      break;
+    case WED_TEXT:
+      sync_day_text(new_tuple,WED_TEXT,3);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Wednesday Text to watch = %s",day_text[3]);
+      break;
+    case THU_TEXT:
+      sync_day_text(new_tuple,THU_TEXT,4);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Thursday Text to watch = %s",day_text[4]);
+      break;
+    case FRI_TEXT:
+      sync_day_text(new_tuple,FRI_TEXT,5);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Friday Text to watch = %s",day_text[5]);
+      break;
+    case SAT_TEXT:
+      sync_day_text(new_tuple,SAT_TEXT,6);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Saturday Text to watch = %s",day_text[6]);
+      break;
   }
 } //sync_tuple_changed_callback
 
@@ -315,7 +387,21 @@ static void send_cmd (void) {
   }
 } //send_cmd
 
+static char *persist_get_string (const uint32_t key,char *def) {
+  char *buffer;
+  if(persist_exists(key)) {
+    int len = persist_get_length(key);
+    buffer = malloc(len);
+    persist_read_string(key,buffer,len);
+  } else {
+    buffer = malloc(strlen(def) + 1);
+    strcpy(buffer,def);
+  }
+  return buffer;
+} //persist_get_string
+
 static void app_init () {
+  int len;
     // Initialize Base Window
   window = window_create();
   window_stack_push(window,true);
@@ -325,6 +411,14 @@ static void app_init () {
   zero_prefix    = persist_exists(ZERO_PREFIX) ? persist_read_bool(ZERO_PREFIX) : false;
   show_power     = persist_exists(SHOW_POWER)  ? persist_read_bool(SHOW_POWER)  : true;
   show_bluetooth = persist_exists(SHOW_BTOOTH) ? persist_read_bool(SHOW_BTOOTH) : true;
+  month_first    = persist_exists(MONTH_FIRST) ? persist_read_bool(MONTH_FIRST) : true;
+  day_text[0]    = persist_get_string(SUN_TEXT,"Su");
+  day_text[1]    = persist_get_string(MON_TEXT,"Mo");
+  day_text[2]    = persist_get_string(TUE_TEXT,"Tu");
+  day_text[3]    = persist_get_string(WED_TEXT,"We");
+  day_text[4]    = persist_get_string(THU_TEXT,"Th");
+  day_text[5]    = persist_get_string(FRI_TEXT,"Fr");
+  day_text[6]    = persist_get_string(SAT_TEXT,"Sa");
     // Initialize Time Tick Handler
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
@@ -334,11 +428,29 @@ static void app_init () {
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
   battery_state_service_subscribe(handle_power_level);
   bluetooth_connection_service_subscribe(handle_connection);
+
+  text_layer = text_layer_create(GRect(14,148,130,168));
+  text_layer_set_text_color(text_layer,GColorWhite);
+  text_layer_set_background_color(text_layer,GColorBlack);
+  text_layer_set_text_alignment(text_layer,GTextAlignmentCenter);
+  text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  display_date(tick_time);
+  prev_day = tm->tm_wday;
+  layer_add_child(window_get_root_layer(window),text_layer_get_layer(text_layer));
+
     // Initialize the Sync Handler
   Tuplet initial_values[] = {
     TupletInteger(ZERO_PREFIX,false),
     TupletInteger(SHOW_POWER,true),
-    TupletInteger(SHOW_BTOOTH,true)
+    TupletInteger(SHOW_BTOOTH,true),
+    TupletInteger(MONTH_FIRST,true),
+    TupletCString(SUN_TEXT,day_text[0]),
+    TupletCString(MON_TEXT,day_text[1]),
+    TupletCString(TUE_TEXT,day_text[2]),
+    TupletCString(WED_TEXT,day_text[3]),
+    TupletCString(THU_TEXT,day_text[4]),
+    TupletCString(FRI_TEXT,day_text[5]),
+    TupletCString(SAT_TEXT,day_text[6]),
   };
   app_sync_init(&sync,sync_buffer,sizeof(sync_buffer),initial_values,ARRAY_LENGTH(initial_values),sync_tuple_changed_callback,sync_error_callback,NULL);
   send_cmd();
@@ -352,8 +464,12 @@ static void app_destroy () {
   for(int i = 0;i < TOTAL_IMAGE_SLOTS;i++) {
     unload_digit_image_from_slot(i);
   }
+  text_layer_destroy(text_layer);
   window_destroy(window);
   app_sync_deinit(&sync);
+  for(int i = 0;i < 7;i++) {
+    free(day_text[i]);
+  }
 } //app_destroy
 
 int main (void) {
