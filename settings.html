@@ -7,24 +7,24 @@
   </head>
   <body>
       <!-- Header -->
-    <h4 style="margin-left:25px; padding-bottom:10px">Choose your settings:</h4>
+    <h1>CST Big Time Settings</h1>
       <!-- Settings Table -->
     <table>
       <tr>
-        <th>Choose an option:</th>
+        <th colspan="2">Choose an option:</th>
       </tr>
       <tr>
-        <td><input type="checkbox" id="zero_prefix" style="width:100px; margin-left:20px;"> <label for="zero_prefix">Zero Prefix Hour Value?</label></td>
+        <td colspan="2"><input type="checkbox" id="zero_prefix" style="width:100px; margin-left:20px;"> <label for="zero_prefix">Zero Prefix Hour Value?</label></td>
       </tr>
       <tr>
-        <td><input type="checkbox" id="show_power" style="width:100px; margin-left:20px;"> <label for="show_power">Show Power Level Indicator?</label></td>
+        <td colspan="2"><input type="checkbox" id="show_power" style="width:100px; margin-left:20px;"> <label for="show_power">Show Power Level Indicator?</label></td>
       </tr>
       <tr>
-        <td><input type="checkbox" id="show_btooth" style="width:100px; margin-left:20px;"> <label for="show_btooth">Show Bluetooth Indicator?</label></td>
+        <td colspan="2"><input type="checkbox" id="show_btooth" style="width:100px; margin-left:20px;"> <label for="show_btooth">Show Bluetooth Indicator?</label></td>
       </tr>
       <tr>
+        <td><label for="month_first">Date Format</label></td>
         <td>
-          <label for="month_first">Date Format</label> 
           <select id="month_first">
             <option value="true">MM/DD</option>
             <option value="false">DD/MM</option>
@@ -32,36 +32,40 @@
         </td>
       </tr>
       <tr>
-        <th>Weekday Abbreviations</th>
+        <th colspan="2">Weekday Abbreviations</th>
       </tr>
       <tr>
-        <td>Sunday: <input type="text" id="sun_text" maxlength="3" /></td>
+        <td><label for="sun_text">Sunday:</label></td>
+        <td><input type="text" id="sun_text" maxlength="3" /></td>
       </tr>
       <tr>
-        <td>Monday: <input type="text" id="mon_text" maxlength="3" /></td>
+        <td><label for="mon_text">Monday:</label>
+        </td><td><input type="text" id="mon_text" maxlength="3" /></td>
       </tr>
       <tr>
-        <td>Tuesday: <input type="text" id="tue_text" maxlength="3" /></td>
+        <td><label for="tue_text">Tuesday:</label></td>
+        <td><input type="text" id="tue_text" maxlength="3" /></td>
       </tr>
       <tr>
-        <td>Wednesday: <input type="text" id="wed_text" maxlength="3" /></td>
+        <td><label for="wed_text">Wednesday:</label></td>
+        <td><input type="text" id="wed_text" maxlength="3" /></td>
       </tr>
       <tr>
-        <td>Thursday: <input type="text" id="thu_text" maxlength="3" /></td>
+        <td><label for="thu_text">Thursday:</label></td>
+        <td><input type="text" id="thu_text" maxlength="3" /></td>
       </tr>
       <tr>
-        <td>Friday: <input type="text" id="fri_text" maxlength="3" /></td>
+        <td><label for="fri_text">Friday:</label></td>
+        <td><input type="text" id="fri_text" maxlength="3" /></td>
       </tr>
       <tr>
-        <td>Saturday: <input type="text" id="sat_text" maxlength="3" /></td>
+        <td><label for="sat_text">Saturday:</label></td>
+        <td><input type="text" id="sat_text" maxlength="3" /></td>
       </tr>
     </table>
     <p style="text-align:center;"><button type="button" class="submit btn btn-success" style="width:100px;margin-top:20px;">Submit</button>
       <!-- Footer -->
     <br />
-    <footer style="width:200px;">
-      <p style="text-align:center;">Created by Anodyzed</p>
-    </footer>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script>
       $(function() {

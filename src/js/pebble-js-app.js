@@ -1,7 +1,7 @@
 // From https://github.com/BalestraPatrick/PebbleConfigurationExample
 
 Pebble.addEventListener("ready",function(event) {
-  console.log("Ready");
+  console.log("CST App Ready");
 });
 
 Pebble.addEventListener("showConfiguration",function(event) {

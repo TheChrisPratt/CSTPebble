@@ -430,7 +430,7 @@ static void app_init () {
   text_layer_set_text_color(text_layer,GColorWhite);
   text_layer_set_background_color(text_layer,GColorBlack);
   text_layer_set_text_alignment(text_layer,GTextAlignmentCenter);
-  text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_20));
   display_date(tick_time);
   prev_day = tick_time->tm_wday;
   layer_add_child(window_get_root_layer(window),text_layer_get_layer(text_layer));
