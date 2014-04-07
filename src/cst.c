@@ -317,59 +317,59 @@ static void sync_day_text (const Tuple *tuple,int key,int day) {
  * Callback to notify when Application Settings change
  */
 static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tuple,const Tuple *old_tuple,void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: %ld, Type: %d, Length: %d",new_tuple->key,new_tuple->type,new_tuple->length);
+//  APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: %ld, Type: %d, Length: %d",new_tuple->key,new_tuple->type,new_tuple->length);
   switch(key) {
     case ZERO_PREFIX:
       zero_prefix = get_tuple_bool_value(new_tuple);
       update_time();
       persist_write_bool(ZERO_PREFIX,zero_prefix);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
       break;
     case SHOW_POWER:
       show_power = get_tuple_bool_value(new_tuple);
       handle_power_level(battery_state_service_peek());
       persist_write_bool(SHOW_POWER,show_power);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting to watch = %s",show_power ? "true" : "false");
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting to watch = %s",show_power ? "true" : "false");
       break;
     case SHOW_BTOOTH:
       show_bluetooth = get_tuple_bool_value(new_tuple);
       handle_connection(bluetooth_connection_service_peek());
       persist_write_bool(SHOW_POWER,show_bluetooth);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Bluetooth Indicator Setting to watch = %s",show_bluetooth ? "true" : "false");
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Bluetooth Indicator Setting to watch = %s",show_bluetooth ? "true" : "false");
       break;
     case MONTH_FIRST:
       month_first = get_tuple_bool_value(new_tuple);
       update_date();
       persist_write_bool(MONTH_FIRST,month_first);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Month First Indicator to watch = %s",month_first ? "month first" : "day first");
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Month First Indicator to watch = %s",month_first ? "month first" : "day first");
       break;
     case SUN_TEXT:
       sync_day_text(new_tuple,SUN_TEXT,0);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Sunday Text to watch = %s",day_text[0]);
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Sunday Text to watch = %s",day_text[0]);
       break;
     case MON_TEXT:
       sync_day_text(new_tuple,MON_TEXT,1);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Monday Text to watch = %s",day_text[1]);
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Monday Text to watch = %s",day_text[1]);
       break;
     case TUE_TEXT:
       sync_day_text(new_tuple,TUE_TEXT,2);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Tuesday Text to watch = %s",day_text[2]);
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Tuesday Text to watch = %s",day_text[2]);
       break;
     case WED_TEXT:
       sync_day_text(new_tuple,WED_TEXT,3);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Wednesday Text to watch = %s",day_text[3]);
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Wednesday Text to watch = %s",day_text[3]);
       break;
     case THU_TEXT:
       sync_day_text(new_tuple,THU_TEXT,4);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Thursday Text to watch = %s",day_text[4]);
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Thursday Text to watch = %s",day_text[4]);
       break;
     case FRI_TEXT:
       sync_day_text(new_tuple,FRI_TEXT,5);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Friday Text to watch = %s",day_text[5]);
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Friday Text to watch = %s",day_text[5]);
       break;
     case SAT_TEXT:
       sync_day_text(new_tuple,SAT_TEXT,6);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Saturday Text to watch = %s",day_text[6]);
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Saturday Text to watch = %s",day_text[6]);
       break;
   }
 } //sync_tuple_changed_callback
@@ -430,7 +430,7 @@ static void app_init () {
   text_layer_set_text_color(text_layer,GColorWhite);
   text_layer_set_background_color(text_layer,GColorBlack);
   text_layer_set_text_alignment(text_layer,GTextAlignmentCenter);
-  text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_20));
+  text_layer_set_font(text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   display_date(tick_time);
   prev_day = tick_time->tm_wday;
   layer_add_child(window_get_root_layer(window),text_layer_get_layer(text_layer));
