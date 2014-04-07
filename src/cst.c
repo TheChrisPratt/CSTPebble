@@ -53,9 +53,6 @@ const int POWER_IMAGE_RESOURCE_IDS[NUMBER_OF_POWER_IMAGES] = {
   RESOURCE_ID_IMAGE_POWER_3, RESOURCE_ID_IMAGE_POWER_4, RESOURCE_ID_IMAGE_POWER_5
 };
 
-const int INBOX_SIZE = 128;
-const int OUTBOX_SIZE = 128;
-
 enum SettingsKeys {
   ZERO_PREFIX = 0x00, // boolean (6 bytes = 6)
   SHOW_POWER  = 0x01, // boolean (6 bytes = 12)
@@ -73,7 +70,7 @@ enum SettingsKeys {
 };
 
 static AppSync sync;
-static uint8_t sync_buffer[128];
+static uint8_t sync_buffer[256];
 
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
@@ -368,12 +365,12 @@ static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tup
     case VIBE_HOUR:
       vibe_hour = get_tuple_bool_value(new_tuple);
       persist_write_bool(VIBE_HOUR,vibe_hour);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Hour to watch = %s",vibe_hour ? "vibe" : "no vibe");
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Hour to watch = %s",vibe_hour ? "vibe" : "no vibe");
       break;
     case VIBE_BTOOTH:
       vibe_bluetooth = get_tuple_bool_value(new_tuple);
       persist_write_bool(VIBE_BTOOTH,vibe_bluetooth);
-      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Bluetooth Connection to watch = %s",vibe_bluetooth ? "vibe" : "no vibe");
+//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Bluetooth Connection to watch = %s",vibe_bluetooth ? "vibe" : "no vibe");
       break;
     case SUN_TEXT:
       sync_day_text(new_tuple,SUN_TEXT,0);
@@ -488,7 +485,7 @@ static void app_init () {
   };
   app_sync_init(&sync,sync_buffer,sizeof(sync_buffer),initial_values,ARRAY_LENGTH(initial_values),sync_tuple_changed_callback,sync_error_callback,NULL);
   send_cmd();
-  app_message_open(INBOX_SIZE,OUTBOX_SIZE);
+  app_message_open(app_message_inbox_size_maximum(),app_message_outbox_size_maximum());
 } //app_init
 
 static void app_destroy () {
