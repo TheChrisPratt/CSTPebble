@@ -57,21 +57,23 @@ const int INBOX_SIZE = 128;
 const int OUTBOX_SIZE = 128;
 
 enum SettingsKeys {
-  ZERO_PREFIX = 0x00, // boolean (1 byte = 1)
-  SHOW_POWER  = 0x01, // boolean (1 byte = 2)
-  SHOW_BTOOTH = 0x02, // boolean (1 byte = 3)
-  MONTH_FIRST = 0x03, // boolean (1 byte = 4)
-  SUN_TEXT = 0x04,    // string (4 bytes = 8)
-  MON_TEXT = 0x05,    // string (4 bytes = 12)
-  TUE_TEXT = 0x06,    // string (4 bytes = 16)
-  WED_TEXT = 0x07,    // string (4 bytes = 20)
-  THU_TEXT = 0x08,    // string (4 bytes = 24)
-  FRI_TEXT = 0x09,    // string (4 bytes = 28)
-  SAT_TEXT = 0x0A     // string (4 bytes = 32)
+  ZERO_PREFIX = 0x00, // boolean (6 bytes = 6)
+  SHOW_POWER  = 0x01, // boolean (6 bytes = 12)
+  SHOW_BTOOTH = 0x02, // boolean (6 bytes = 18)
+  MONTH_FIRST = 0x03, // boolean (6 bytes = 24)
+  SUN_TEXT    = 0x04, // string (4 bytes = 28)
+  MON_TEXT    = 0x05, // string (4 bytes = 32)
+  TUE_TEXT    = 0x06, // string (4 bytes = 36)
+  WED_TEXT    = 0x07, // string (4 bytes = 40)
+  THU_TEXT    = 0x08, // string (4 bytes = 44)
+  FRI_TEXT    = 0x09, // string (4 bytes = 48)
+  SAT_TEXT    = 0x0A, // string (4 bytes = 52)
+  VIBE_HOUR   = 0x0B, // boolean (6 bytes = 58)
+  VIBE_BTOOTH = 0x0C, // boolean (6 bytes = 64)
 };
 
 static AppSync sync;
-static uint8_t sync_buffer[64];
+static uint8_t sync_buffer[96];
 
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
@@ -80,6 +82,14 @@ static BitmapLayer *bluetooth_layer = NULL;
 static GBitmap *power_image = NULL;
 static BitmapLayer *power_layer = NULL;
 static TextLayer *text_layer = NULL;
+static VibePattern asc = {
+  .duration = { 200, 100, 400 },
+  .num_segments = 3
+};
+static VibePattern desc = {
+  .duration = { 400, 100, 200 },
+  .num_segments = 3
+};
 
 #define EMPTY_SLOT -1
 
@@ -88,13 +98,16 @@ static TextLayer *text_layer = NULL;
 static int image_slot_state[TOTAL_IMAGE_SLOTS] = {EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT};
 static bool prev_bluetooth = false;
 static short prev_power = -1;
-static int prev_day = -1;
+static short prev_hour = -1;
+static short prev_day = -1;
 static char date[16];
 
 static volatile bool zero_prefix    = false;
 static volatile bool show_power     = true;
 static volatile bool show_bluetooth = true;
 static volatile bool month_first    = true;
+static volatile bool vibe_hour      = true;
+static volatile bool vibe_bluetooth = false;
 static char day_text[7][4];
 
 /**
@@ -200,6 +213,10 @@ static void handle_minute_tick (struct tm *tick_time,TimeUnits units_changed) {
     display_date(tick_time);
     prev_day = tick_time->tm_wday;
   }
+  if(vibe_hour && (prev_hour != tick_time->tm_hour)) {
+    vibes_double_pulse();
+    prev_hour = tick_time->tm_hour;
+  }
 } //handle_minute_tick
 
 static void update_time () {
@@ -258,8 +275,8 @@ static void hide_bluetooth () {
 } //hide_bluetooth
 
 static void handle_connection (bool connected) {
-  if(show_bluetooth) {
-    if(connected != prev_bluetooth) {
+  if(connected != prev_bluetooth) {
+    if(show_bluetooth) {
       if(connected) {
           //Display the Bluetooth Image Layer
         if(bluetooth_image == NULL) {
@@ -281,15 +298,18 @@ static void handle_connection (bool connected) {
           hide_bluetooth();
         }
       }
-      prev_bluetooth = connected;
-    }  
-  } else {
-      // Hide the Bluetooth Image Layer
-    if(bluetooth_image != NULL) {
-      hide_bluetooth();
-      prev_bluetooth = false;
+    } else {
+        // Hide the Bluetooth Image Layer
+      if(bluetooth_image != NULL) {
+        hide_bluetooth();
+        prev_bluetooth = false;
+      }
+    }    
+    if(vibe_bluetooth) {
+      vibes_enqueue_custom_pattern((connected) ? asc : desc);
     }
-  }    
+    prev_bluetooth = connected;
+  }  
 } //handle_connection
 
 static bool get_tuple_bool_value (const Tuple * tuple) {
@@ -342,6 +362,16 @@ static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tup
       update_date();
       persist_write_bool(MONTH_FIRST,month_first);
 //      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Month First Indicator to watch = %s",month_first ? "month first" : "day first");
+      break;
+    case VIBE_HOUR:
+      vibe_hour = get_tuple_bool_value(new_tuple);
+      persist_write_bool(VIBE_HOUR,vibe_hour);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Hour to watch = %s",vibe_hour ? "vibe" : "no vibe");
+      break;
+    case VIBE_BTOOTH:
+      vibe_bluetooth = get_tuple_bool_value(new_tuple);
+      persist_write_bool(VIBE_BTOOTH,vibe_bluetooth);
+      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Bluetooth Connection to watch = %s",vibe_bluetooth ? "vibe" : "no vibe");
       break;
     case SUN_TEXT:
       sync_day_text(new_tuple,SUN_TEXT,0);
@@ -405,6 +435,8 @@ static void app_init () {
   show_power     = persist_exists(SHOW_POWER)  ? persist_read_bool(SHOW_POWER)  : true;
   show_bluetooth = persist_exists(SHOW_BTOOTH) ? persist_read_bool(SHOW_BTOOTH) : true;
   month_first    = persist_exists(MONTH_FIRST) ? persist_read_bool(MONTH_FIRST) : true;
+  vibe_hour      = persist_exists(VIBE_HOUR)   ? persist_read_bool(VIBE_HOUR)   : true;
+  vibe_bluetooth = persist_exists(VIBE_BTOOTH) ? persist_read_bool(VIBE_BTOOTH) : false;
   persist_get_string(SUN_TEXT,day_text[0],"Su");
   persist_get_string(MON_TEXT,day_text[1],"Mo");
   persist_get_string(TUE_TEXT,day_text[2],"Tu");
@@ -422,6 +454,7 @@ static void app_init () {
   battery_state_service_subscribe(handle_power_level);
   bluetooth_connection_service_subscribe(handle_connection);
 
+    // Date Text Layer
   GRect rect = (GRect) {
     .origin = { 17,148 },
       .size = { 110,20 }
@@ -447,7 +480,9 @@ static void app_init () {
     TupletCString(WED_TEXT,day_text[3]),
     TupletCString(THU_TEXT,day_text[4]),
     TupletCString(FRI_TEXT,day_text[5]),
-    TupletCString(SAT_TEXT,day_text[6])
+    TupletCString(SAT_TEXT,day_text[6]),
+    TupletInteger(VIBE_HOUR,true),
+    TupletInteger(VIBE_BTOOTH,false)
   };
   app_sync_init(&sync,sync_buffer,sizeof(sync_buffer),initial_values,ARRAY_LENGTH(initial_values),sync_tuple_changed_callback,sync_error_callback,NULL);
   send_cmd();

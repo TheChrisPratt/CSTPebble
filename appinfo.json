@@ -1,5 +1,5 @@
 {
-    "versionLabel": "1.4",
+    "versionLabel": "1.5",
     "uuid": "676b3ccf-b6e2-4215-8458-26244ebb254e",
     "appKeys": {
         "show_btooth": 2,
@@ -12,7 +12,9 @@
         "zero_prefix": 0,
         "sun_text": 4,
         "fri_text": 9,
-        "sat_text": 10
+        "sat_text": 10,
+        "vibe_hour": 11,
+        "vibe_btooth": 12
     },
     "longName": "CST Big Time",
     "versionCode": 1,
