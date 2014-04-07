@@ -73,7 +73,7 @@ enum SettingsKeys {
 };
 
 static AppSync sync;
-static uint8_t sync_buffer[96];
+static uint8_t sync_buffer[128];
 
 static GBitmap *images[TOTAL_IMAGE_SLOTS];
 static BitmapLayer *image_layers[TOTAL_IMAGE_SLOTS];
@@ -82,13 +82,15 @@ static BitmapLayer *bluetooth_layer = NULL;
 static GBitmap *power_image = NULL;
 static BitmapLayer *power_layer = NULL;
 static TextLayer *text_layer = NULL;
+static const uint32_t const asc_segments[] = { 200, 100, 400 };
+static const uint32_t const desc_segments[] = { 400, 100, 200 };
 static VibePattern asc = {
-  .duration = { 200, 100, 400 },
-  .num_segments = 3
+  .durations = asc_segments,
+  .num_segments = ARRAY_LENGTH(asc_segments)
 };
 static VibePattern desc = {
-  .duration = { 400, 100, 200 },
-  .num_segments = 3
+  .durations = desc_segments,
+  .num_segments = ARRAY_LENGTH(desc_segments)
 };
 
 #define EMPTY_SLOT -1
