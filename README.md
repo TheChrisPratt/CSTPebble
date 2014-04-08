@@ -14,8 +14,9 @@ Current Features
 * Pebble Power Level Indicator (1.1)
 * Settings Screen to allow Indicators to be turned on/off (1.3)
 * Add Day of Week and Day/Month between indicators (1.4)
+* Vibe on the Hour [Configurable] (1.5)
+* Vibe on Loss of Bluetooth Connection [Configurable] (1.5)
 
 Planned Enhancements
 --------------------
-* Vibe on the Hour (Configurable)
-* Vibe on Loss of Bluetooth Connection (Configurable)
+* If you have any requests, let me know
