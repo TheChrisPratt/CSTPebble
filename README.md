@@ -5,7 +5,7 @@ Pebble Big Time Watch Face using a CST like font.
 
 Hosted at CloudPebble: https://cloudpebble.net/ide/project/39820
 
-Current Version: 1.4
+Current Version: 1.5
 
 Current Features
 ----------------
