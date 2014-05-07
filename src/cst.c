@@ -200,8 +200,8 @@ static void display_time (struct tm *tick_time,bool changed) {
 } //display_time
 
 static void display_date (struct tm *tick_time) {
-  int date1 = (month_first) ? tick_time->tm_mon : tick_time->tm_mday;
-  int date2 = (month_first) ? tick_time->tm_mday : tick_time->tm_mon;
+  int date1 = (month_first) ? tick_time->tm_mon + 1 : tick_time->tm_mday;
+  int date2 = (month_first) ? tick_time->tm_mday : tick_time->tm_mon + 1;
   snprintf(date,16,"%s %d/%d",day_text[tick_time->tm_wday],date1,date2);
   text_layer_set_text(text_layer,date);
 } //display_date
