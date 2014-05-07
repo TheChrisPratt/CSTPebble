@@ -446,6 +446,7 @@ static void app_init () {
     // Initialize Time Tick Handler
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
+  prev_hour = tick_time->tm_hour;
   display_time(tick_time,true);
   handle_power_level(battery_state_service_peek());
   handle_connection(bluetooth_connection_service_peek());
