@@ -99,7 +99,7 @@
             }
         ]
     },
-    "versionLabel": "1.5",
+    "versionLabel": "1.7",
     "companyName": "Anodyzed",
     "watchapp": {
         "watchface": true
@@ -109,13 +109,13 @@
         "mon_text": 5,
         "show_power": 1,
         "show_btooth": 2,
-        "tue_text": 6,
         "wed_text": 8,
         "vibe_btooth": 12,
+        "vibe_hour": 11,
         "month_first": 3,
         "sat_text": 10,
         "fri_text": 9,
-        "vibe_hour": 11,
+        "tue_text": 6,
         "zero_prefix": 0,
         "sun_text": 4
     },
