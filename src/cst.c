@@ -353,7 +353,7 @@ static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tup
     case SHOW_BTOOTH:
       show_bluetooth = get_tuple_bool_value(new_tuple);
       handle_connection(bluetooth_connection_service_peek());
-      persist_write_bool(SHOW_POWER,show_bluetooth);
+      persist_write_bool(SHOW_BTOOTH,show_bluetooth);
 //      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Bluetooth Indicator Setting to watch = %s",show_bluetooth ? "true" : "false");
       break;
     case MONTH_FIRST:
