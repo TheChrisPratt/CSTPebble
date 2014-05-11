@@ -100,6 +100,7 @@ static short prev_power = -1;
 static short prev_hour = -1;
 static short prev_day = -1;
 static char date[16];
+static unsigned int initializing = 0;
 
 static volatile bool zero_prefix    = false;
 static volatile bool show_power     = true;
@@ -265,50 +266,37 @@ static void handle_power_level (BatteryChargeState charge_state) {
   }
 } //handle_power_level
 
-static void hide_bluetooth () {
-  layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
-  bitmap_layer_destroy(bluetooth_layer);
-  bluetooth_layer = NULL;
-  gbitmap_destroy(bluetooth_image);
-  bluetooth_image = NULL;
-} //hide_bluetooth
-
 static void handle_connection (bool connected) {
+  if(show_bluetooth) {
+      //Display the Bluetooth Image Layer
+    if(bluetooth_image == NULL) {
+      bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
+      GRect frame = (GRect) {
+//        .origin = { 103,150 }, <-- Centered under ones digits
+        .origin = { 129,150 },   //  Right aligned (5px border)
+        .size = bluetooth_image->bounds.size
+      };
+      if(bluetooth_layer == NULL) {
+        bluetooth_layer = bitmap_layer_create(frame);
+      }
+      bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
+      layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
+    }
+  } else {
+    if(bluetooth_image != NULL) {
+      layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
+      bitmap_layer_destroy(bluetooth_layer);
+      bluetooth_layer = NULL;
+      gbitmap_destroy(bluetooth_image);
+      bluetooth_image = NULL;
+    }
+  }
   if(connected != prev_bluetooth) {
-    if(show_bluetooth) {
-      if(connected) {
-          //Display the Bluetooth Image Layer
-        if(bluetooth_image == NULL) {
-          bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
-          GRect frame = (GRect) {
-//            .origin = { 103,150 }, <-- Centered under ones digits
-            .origin = { 129,150 },   //  Right aligned (5px border)
-            .size = bluetooth_image->bounds.size
-          };
-          if(bluetooth_layer == NULL) {
-            bluetooth_layer = bitmap_layer_create(frame);
-          }
-          bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
-          layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
-        }
-      } else {
-          // Hide the Bluetooth Image Layer
-        if(bluetooth_image != NULL) {
-          hide_bluetooth();
-        }
-      }
-    } else {
-        // Hide the Bluetooth Image Layer
-      if(bluetooth_image != NULL) {
-        hide_bluetooth();
-        prev_bluetooth = false;
-      }
-    }    
     if(vibe_bluetooth) {
       vibes_enqueue_custom_pattern((connected) ? asc : desc);
     }
     prev_bluetooth = connected;
-  }  
+  }
 } //handle_connection
 
 static bool get_tuple_bool_value (const Tuple * tuple) {
@@ -336,70 +324,76 @@ static void sync_day_text (const Tuple *tuple,int key,int day) {
  * Callback to notify when Application Settings change
  */
 static void sync_tuple_changed_callback (const uint32_t key,const Tuple *new_tuple,const Tuple *old_tuple,void *context) {
-//  APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: %ld, Type: %d, Length: %d",new_tuple->key,new_tuple->type,new_tuple->length);
-  switch(key) {
-    case ZERO_PREFIX:
-      zero_prefix = get_tuple_bool_value(new_tuple);
-      update_time();
-      persist_write_bool(ZERO_PREFIX,zero_prefix);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
-      break;
-    case SHOW_POWER:
-      show_power = get_tuple_bool_value(new_tuple);
-      handle_power_level(battery_state_service_peek());
-      persist_write_bool(SHOW_POWER,show_power);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Power Indicator Setting to watch = %s",show_power ? "true" : "false");
-      break;
-    case SHOW_BTOOTH:
-      show_bluetooth = get_tuple_bool_value(new_tuple);
-      handle_connection(bluetooth_connection_service_peek());
-      persist_write_bool(SHOW_BTOOTH,show_bluetooth);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Bluetooth Indicator Setting to watch = %s",show_bluetooth ? "true" : "false");
-      break;
-    case MONTH_FIRST:
-      month_first = get_tuple_bool_value(new_tuple);
-      update_date();
-      persist_write_bool(MONTH_FIRST,month_first);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Month First Indicator to watch = %s",month_first ? "month first" : "day first");
-      break;
-    case VIBE_HOUR:
-      vibe_hour = get_tuple_bool_value(new_tuple);
-      persist_write_bool(VIBE_HOUR,vibe_hour);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Hour to watch = %s",vibe_hour ? "vibe" : "no vibe");
-      break;
-    case VIBE_BTOOTH:
-      vibe_bluetooth = get_tuple_bool_value(new_tuple);
-      persist_write_bool(VIBE_BTOOTH,vibe_bluetooth);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Vibe on Bluetooth Connection to watch = %s",vibe_bluetooth ? "vibe" : "no vibe");
-      break;
-    case SUN_TEXT:
-      sync_day_text(new_tuple,SUN_TEXT,0);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Sunday Text to watch = %s",day_text[0]);
-      break;
-    case MON_TEXT:
-      sync_day_text(new_tuple,MON_TEXT,1);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Monday Text to watch = %s",day_text[1]);
-      break;
-    case TUE_TEXT:
-      sync_day_text(new_tuple,TUE_TEXT,2);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Tuesday Text to watch = %s",day_text[2]);
-      break;
-    case WED_TEXT:
-      sync_day_text(new_tuple,WED_TEXT,3);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Wednesday Text to watch = %s",day_text[3]);
-      break;
-    case THU_TEXT:
-      sync_day_text(new_tuple,THU_TEXT,4);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Thursday Text to watch = %s",day_text[4]);
-      break;
-    case FRI_TEXT:
-      sync_day_text(new_tuple,FRI_TEXT,5);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Friday Text to watch = %s",day_text[5]);
-      break;
-    case SAT_TEXT:
-      sync_day_text(new_tuple,SAT_TEXT,6);
-//      APP_LOG(APP_LOG_LEVEL_DEBUG,"Saved new Saturday Text to watch = %s",day_text[6]);
-      break;
+//  APP_LOG(APP_LOG_LEVEL_DEBUG,"    Testing key %u in %04x = %u",(unsigned)key,initializing,(initializing & (1 << key)));
+  if((initializing & (1 << key)) != 0) {
+//    APP_LOG(APP_LOG_LEVEL_DEBUG,"Tuple Key: %ld, Type: %d, Length: %d",new_tuple->key,new_tuple->type,new_tuple->length);
+    switch(key) {
+      case ZERO_PREFIX:
+        zero_prefix = get_tuple_bool_value(new_tuple);
+        update_time();
+        persist_write_bool(ZERO_PREFIX,zero_prefix);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Zero Prefix Setting to watch = %s",zero_prefix ? "true" : "false");
+        break;
+      case SHOW_POWER:
+        show_power = get_tuple_bool_value(new_tuple);
+        handle_power_level(battery_state_service_peek());
+        persist_write_bool(SHOW_POWER,show_power);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Power Indicator Setting to watch = %s",show_power ? "true" : "false");
+        break;
+      case SHOW_BTOOTH:
+        show_bluetooth = get_tuple_bool_value(new_tuple);
+        handle_connection(bluetooth_connection_service_peek());
+        persist_write_bool(SHOW_BTOOTH,show_bluetooth);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Bluetooth Indicator Setting to watch = %s",show_bluetooth ? "true" : "false");
+        break;
+      case MONTH_FIRST:
+        month_first = get_tuple_bool_value(new_tuple);
+        update_date();
+        persist_write_bool(MONTH_FIRST,month_first);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Month First Indicator to watch = %s",month_first ? "month first" : "day first");
+        break;
+      case VIBE_HOUR:
+        vibe_hour = get_tuple_bool_value(new_tuple);
+        persist_write_bool(VIBE_HOUR,vibe_hour);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Vibe on Hour to watch = %s",vibe_hour ? "vibe" : "no vibe");
+        break;
+      case VIBE_BTOOTH:
+        vibe_bluetooth = get_tuple_bool_value(new_tuple);
+        persist_write_bool(VIBE_BTOOTH,vibe_bluetooth);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Vibe on Bluetooth Connection to watch = %s",vibe_bluetooth ? "vibe" : "no vibe");
+        break;
+      case SUN_TEXT:
+        sync_day_text(new_tuple,SUN_TEXT,0);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Sunday Text to watch = %s",day_text[0]);
+        break;
+      case MON_TEXT:
+        sync_day_text(new_tuple,MON_TEXT,1);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Monday Text to watch = %s",day_text[1]);
+        break;
+      case TUE_TEXT:
+        sync_day_text(new_tuple,TUE_TEXT,2);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Tuesday Text to watch = %s",day_text[2]);
+        break;
+      case WED_TEXT:
+        sync_day_text(new_tuple,WED_TEXT,3);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Wednesday Text to watch = %s",day_text[3]);
+        break;
+      case THU_TEXT:
+        sync_day_text(new_tuple,THU_TEXT,4);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Thursday Text to watch = %s",day_text[4]);
+        break;
+      case FRI_TEXT:
+        sync_day_text(new_tuple,FRI_TEXT,5);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Friday Text to watch = %s",day_text[5]);
+        break;
+      case SAT_TEXT:
+        sync_day_text(new_tuple,SAT_TEXT,6);
+//        APP_LOG(APP_LOG_LEVEL_DEBUG,"  Saved new Saturday Text to watch = %s",day_text[6]);
+        break;
+    }
+  } else {
+    initializing |= (1 << key);
+//    APP_LOG(APP_LOG_LEVEL_DEBUG,"    Setting initializing to %04x",initializing);
   }
 } //sync_tuple_changed_callback
 
@@ -413,6 +407,17 @@ static void send_cmd (void) {
     app_message_outbox_send();
   }
 } //send_cmd
+
+static bool persist_get_bool (const uint32_t key,bool def,char *setting) {
+  if(persist_exists(key)) {
+//    bool ret = persist_read_bool(key);
+//    APP_LOG(APP_LOG_LEVEL_DEBUG,"Retrieved %s setting from watch = %s",setting,ret ? "true" : "false");
+//    return ret;
+    return persist_read_bool(key);
+  }
+//  APP_LOG(APP_LOG_LEVEL_DEBUG,"Returning default setting for %s setting = %s",setting,def ? "true" : "false");
+  return def;
+} //persist_get_bool
 
 static char *persist_get_string (const uint32_t key,char *buffer,char *def) {
   if(persist_exists(key)) {
@@ -430,12 +435,12 @@ static void app_init () {
     // Avoids a blank screen on watch start
   window_set_background_color(window,GColorBlack);
     // Retrieve Settings
-  zero_prefix    = persist_exists(ZERO_PREFIX) ? persist_read_bool(ZERO_PREFIX) : false;
-  show_power     = persist_exists(SHOW_POWER)  ? persist_read_bool(SHOW_POWER)  : true;
-  show_bluetooth = persist_exists(SHOW_BTOOTH) ? persist_read_bool(SHOW_BTOOTH) : true;
-  month_first    = persist_exists(MONTH_FIRST) ? persist_read_bool(MONTH_FIRST) : true;
-  vibe_hour      = persist_exists(VIBE_HOUR)   ? persist_read_bool(VIBE_HOUR)   : true;
-  vibe_bluetooth = persist_exists(VIBE_BTOOTH) ? persist_read_bool(VIBE_BTOOTH) : false;
+  zero_prefix    = persist_get_bool(ZERO_PREFIX,false,"Zero Prefix");
+  show_power     = persist_get_bool(SHOW_POWER,true,"Power Indicator");
+  show_bluetooth = persist_get_bool(SHOW_BTOOTH,true,"Bluetooth Indicator");
+  month_first    = persist_get_bool(MONTH_FIRST,true,"Month First Indicator");
+  vibe_hour      = persist_get_bool(VIBE_HOUR,true,"Vibe on Hour");
+  vibe_bluetooth = persist_get_bool(VIBE_BTOOTH,false,"Vibe on Bluetooth");
   persist_get_string(SUN_TEXT,day_text[0],"Su");
   persist_get_string(MON_TEXT,day_text[1],"Mo");
   persist_get_string(TUE_TEXT,day_text[2],"Tu");
