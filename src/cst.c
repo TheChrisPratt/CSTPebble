@@ -266,29 +266,39 @@ static void handle_power_level (BatteryChargeState charge_state) {
   }
 } //handle_power_level
 
+static void hide_bluetooth () {
+  layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
+  bitmap_layer_destroy(bluetooth_layer);
+  bluetooth_layer = NULL;
+  gbitmap_destroy(bluetooth_image);
+  bluetooth_image = NULL;
+} //hide_bluetooth
+
 static void handle_connection (bool connected) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG,"%s",(show_bluetooth) ? "Showing Bluetooth Indicator" : "Not Showing Bluetooth Indicator");
   if(show_bluetooth) {
-      //Display the Bluetooth Image Layer
-    if(bluetooth_image == NULL) {
-      bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
-      GRect frame = (GRect) {
-//        .origin = { 103,150 }, <-- Centered under ones digits
-        .origin = { 129,150 },   //  Right aligned (5px border)
-        .size = bluetooth_image->bounds.size
-      };
-      if(bluetooth_layer == NULL) {
-        bluetooth_layer = bitmap_layer_create(frame);
+    APP_LOG(APP_LOG_LEVEL_DEBUG,"Bluetooth %s",(connected) ? "Connected" : "Disconnected");
+    if(connected) {
+        //Display the Bluetooth Image Layer
+      if(bluetooth_image == NULL) {
+        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH);
+        GRect frame = (GRect) {
+//          .origin = { 103,150 }, <-- Centered under ones digits
+          .origin = { 129,150 },   //  Right aligned (5px border)
+          .size = bluetooth_image->bounds.size
+        };
+        if(bluetooth_layer == NULL) {
+          bluetooth_layer = bitmap_layer_create(frame);
+        }
+        bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
+        layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
       }
-      bitmap_layer_set_bitmap(bluetooth_layer,bluetooth_image);
-      layer_add_child(window_get_root_layer(window),bitmap_layer_get_layer(bluetooth_layer));
+    } else {
+      hide_bluetooth();
     }
   } else {
     if(bluetooth_image != NULL) {
-      layer_remove_from_parent(bitmap_layer_get_layer(bluetooth_layer));
-      bitmap_layer_destroy(bluetooth_layer);
-      bluetooth_layer = NULL;
-      gbitmap_destroy(bluetooth_image);
-      bluetooth_image = NULL;
+      hide_bluetooth();
     }
   }
   if(connected != prev_bluetooth) {
@@ -453,10 +463,11 @@ static void app_init () {
   struct tm *tick_time = localtime(&now);
   prev_hour = tick_time->tm_hour;
   display_time(tick_time,true);
-  handle_power_level(battery_state_service_peek());
-  handle_connection(bluetooth_connection_service_peek());
   tick_timer_service_subscribe(MINUTE_UNIT,handle_minute_tick);
+  handle_power_level(battery_state_service_peek());
   battery_state_service_subscribe(handle_power_level);
+  prev_bluetooth = bluetooth_connection_service_peek();
+  handle_connection(prev_bluetooth);
   bluetooth_connection_service_subscribe(handle_connection);
 
     // Date Text Layer

@@ -1,123 +1,123 @@
 {
-    "versionCode": 1,
-    "shortName": "CST",
-    "capabilities": [
-        "configurable"
-    ],
     "resources": {
         "media": [
             {
-                "menuIcon": true,
+                "name": "IMAGE_NUM_0",
                 "type": "png",
-                "name": "IMAGE_MENU_ICON",
-                "file": "images/menu_icon_cst_watch.png"
+                "file": "images/cst_0.png"
             },
             {
-                "type": "png",
-                "name": "IMAGE_POWER_5",
-                "file": "images/power_5.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_POWER_4",
-                "file": "images/power_4.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_POWER_3",
-                "file": "images/power_3.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_POWER_2",
-                "file": "images/power_2.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_POWER_1",
-                "file": "images/power_1.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_POWER_0",
-                "file": "images/power_0.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_BLUETOOTH",
-                "file": "images/bluetooth.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_9",
-                "file": "images/cst_9.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_8",
-                "file": "images/cst_8.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_7",
-                "file": "images/cst_7.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_6",
-                "file": "images/cst_6.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_5",
-                "file": "images/cst_5.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_4",
-                "file": "images/cst_4.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_3",
-                "file": "images/cst_3.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_NUM_2",
-                "file": "images/cst_2.png"
-            },
-            {
-                "type": "png",
                 "name": "IMAGE_NUM_1",
+                "type": "png",
                 "file": "images/cst_1.png"
             },
             {
+                "name": "IMAGE_NUM_2",
                 "type": "png",
-                "name": "IMAGE_NUM_0",
-                "file": "images/cst_0.png"
+                "file": "images/cst_2.png"
+            },
+            {
+                "name": "IMAGE_NUM_3",
+                "type": "png",
+                "file": "images/cst_3.png"
+            },
+            {
+                "name": "IMAGE_NUM_4",
+                "type": "png",
+                "file": "images/cst_4.png"
+            },
+            {
+                "name": "IMAGE_NUM_5",
+                "type": "png",
+                "file": "images/cst_5.png"
+            },
+            {
+                "name": "IMAGE_NUM_6",
+                "type": "png",
+                "file": "images/cst_6.png"
+            },
+            {
+                "name": "IMAGE_NUM_7",
+                "type": "png",
+                "file": "images/cst_7.png"
+            },
+            {
+                "name": "IMAGE_NUM_8",
+                "type": "png",
+                "file": "images/cst_8.png"
+            },
+            {
+                "name": "IMAGE_NUM_9",
+                "type": "png",
+                "file": "images/cst_9.png"
+            },
+            {
+                "name": "IMAGE_BLUETOOTH",
+                "type": "png",
+                "file": "images/bluetooth.png"
+            },
+            {
+                "name": "IMAGE_POWER_0",
+                "type": "png",
+                "file": "images/power_0.png"
+            },
+            {
+                "name": "IMAGE_POWER_1",
+                "type": "png",
+                "file": "images/power_1.png"
+            },
+            {
+                "name": "IMAGE_POWER_2",
+                "type": "png",
+                "file": "images/power_2.png"
+            },
+            {
+                "name": "IMAGE_POWER_3",
+                "type": "png",
+                "file": "images/power_3.png"
+            },
+            {
+                "name": "IMAGE_POWER_4",
+                "type": "png",
+                "file": "images/power_4.png"
+            },
+            {
+                "name": "IMAGE_POWER_5",
+                "type": "png",
+                "file": "images/power_5.png"
+            },
+            {
+                "name": "IMAGE_MENU_ICON",
+                "menuIcon": true,
+                "type": "png",
+                "file": "images/menu_icon_cst_watch.png"
             }
         ]
     },
-    "versionLabel": "1.7",
     "companyName": "Anodyzed",
+    "shortName": "CST",
+    "uuid": "676b3ccf-b6e2-4215-8458-26244ebb254e",
+    "versionCode": 1,
+    "capabilities": [
+        "configurable"
+    ],
+    "longName": "CST Big Time",
     "watchapp": {
         "watchface": true
     },
-    "uuid": "676b3ccf-b6e2-4215-8458-26244ebb254e",
     "appKeys": {
-        "mon_text": 5,
-        "show_power": 1,
-        "show_btooth": 2,
-        "wed_text": 8,
-        "vibe_btooth": 12,
-        "vibe_hour": 11,
         "month_first": 3,
-        "sat_text": 10,
         "fri_text": 9,
+        "vibe_btooth": 12,
+        "show_btooth": 2,
+        "mon_text": 5,
+        "vibe_hour": 11,
+        "sat_text": 10,
+        "sun_text": 4,
         "tue_text": 6,
-        "zero_prefix": 0,
-        "sun_text": 4
+        "wed_text": 8,
+        "show_power": 1,
+        "zero_prefix": 0
     },
-    "longName": "CST Big Time"
+    "versionLabel": "1.8"
 }
